@@ -27,8 +27,12 @@ class Session:
     def get_level(self):
         return self.get_location().get_level()
 
+    ''' Returns an array. May contain more than one item, if the
+    location is a Combo Room. '''
     def get_rooms(self):
         return self.get_location().get_rooms()
+
+    
 
     def get_room_count(self):
         return len(self.get_rooms())

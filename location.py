@@ -66,6 +66,12 @@ class Room(Location):
     def should_display(self):
         return self.is_used and not self.is_suppressed()
 
+    def get_used_sections(self):
+        if self.sections:
+            return self.sections
+        else:
+            return [self]
+
 class Level(Location):
     def __init__(self, name, short_name=None):
         super().__init__(name, short_name)
@@ -83,6 +89,12 @@ class Level(Location):
 
     def get_used_rooms(self):
         return [r for r in self.rooms if r.should_display()]
+
+    def get_used_sections(self):
+        results = []
+        for r in self.get_used_rooms():
+            results += r.get_used_sections()
+        return results
         
 class ComboRoom(Location):
     def __init__(self, name, *args):
@@ -103,4 +115,10 @@ def get_used_rooms():
     results = []
     for level in gLevelList:
         results += level.get_used_rooms()
+    return results
+
+def get_used_sections():
+    results = []
+    for level in gLevelList:
+        results += level.get_used_sections()
     return results

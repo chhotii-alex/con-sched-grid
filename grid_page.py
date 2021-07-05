@@ -122,6 +122,9 @@ class GridPage:
         self.cell_width = 24
         self.day_name = day_name
         self.time_range = time_range
+        self.sessions_per_section = {}
+        for section in location.get_used_sections():
+            self.sessions_per_section[section] = BucketList(time_range)
         self.sessions_per_room = {}
         for room in location.get_used_rooms():
             self.sessions_per_room[room] = BucketList(time_range)
@@ -193,20 +196,19 @@ class GridPage:
             rooms = level.get_used_rooms()
             if not rooms:
                 continue
-            rows += '<tr>'
-            rows += '<td rowspan="%d" class="limit-%drow">' % (
-                len(rooms), len(rooms))
-            rows += '<div class="level-name" width="20px">'
-            rows += level.name
-            rows += " (%s)" % level.short_name
-            rows += '</div>'
-            rows += '</td>'
-
-            rows += self.get_detail_for_room(rooms[0], True)
-            
-            rows += '</tr>'
-            for room in rooms[1:]:
+            sections = level.get_used_sections()
+            first = True
+            for room in rooms:
                 rows += '<tr>'
+                if first:
+                    rows += '<td rowspan="%d" class="limit-%drow">' % (
+                        len(rooms), len(rooms))
+                    rows += '<div class="level-name" width="20px">'
+                    rows += level.name
+                    rows += " (%s)" % level.short_name
+                    rows += '</div>'
+                    rows += '</td>'
+                    first = False
                 rows += self.get_detail_for_room(room, False)
                 rows += '</tr>'
         rows += '''

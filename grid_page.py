@@ -85,11 +85,13 @@ border-collapse: collapse;
  color: white;
  font-size: 9px;
  background-color: black;
+ -webkit-print-color-adjust: exact;
  width: 25px;
  max-width: 25px; 
 }
 .gray {
   background-color: #888888;
+ -webkit-print-color-adjust: exact;
 }
 .schedule_item {
   font-family: 'Times New Roman', serif;
@@ -108,9 +110,7 @@ $title
 </title>
 </head>
 <body>
-<div class="event-name">Arisia 2022</div>
 <div class="center">$day $slice</div>
-<br/>
 $detail
 </body>
 </html>

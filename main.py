@@ -27,5 +27,3 @@ for day_index in range(len(days)):
         page = GridPage(day, time_range, bucket)
         page.write()
         page.open()
-        if len(bucket) > 5:
-            sys.exit(); # just do one for now

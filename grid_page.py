@@ -2,11 +2,7 @@ import os
 from string import Template
 import location
 
-main_template = '''
-<!DOCTYPE html>
-<html>
-<head>
-<style>
+css_template = '''
 body {
   font-family: Arial, sans-serif;
 }
@@ -17,52 +13,6 @@ table {
 td {
 border: 1px solid black;
 overflow: hidden;
-}
-.limit-1row {
-overflow: hidden;
-max-height: 25px;
-}
-.limit-2row {
-overflow: hidden;
-max-height: 50px;
-}
-.limit-3row {
-overflow: hidden;
-max-height: 75px;
-}
-.limit-4row {
-overflow: hidden;
-max-height: 100px;
-}
-.limit-1col {
- max-width: 25px;
-}
-.limit-2col {
- max-width: 50px;
-}
-.limit-3col {
- max-width: 75px;
-}
-.limit-4col {
- max-width: 100px;
-}
-.limit-5col {
- max-width: 125px;
-}
-.limit-6col {
- max-width: 150px;
-}
-.limit-7col {
- max-width: 175px;
-}
-.limit-8col {
- max-width: 200px;
-}
-.limit-9col {
- max-width: 225px;
-}
-.limit-10col {
- max-width: 250px;
 }
 table {
 border-collapse: collapse;
@@ -75,8 +25,8 @@ border-collapse: collapse;
 .room-name {
  border: None;
  font-size: 11px;
- width: 100px;
- height: 25px;
+ width: ${w_unit4};
+ height: ${h_unit1};
 }
 .first-room {
  border-top: 1px solid black;
@@ -86,8 +36,8 @@ border-collapse: collapse;
  font-size: 9px;
  background-color: black;
  -webkit-print-color-adjust: exact;
- width: 25px;
- max-width: 25px; 
+ width: ${w_unit1};
+ max-width: ${w_unit1}; 
 }
 .gray {
   background-color: #888888;
@@ -103,7 +53,14 @@ border-collapse: collapse;
 text-align: center;
 font-weight: bold;
 }
+'''
 
+main_template = '''
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+$css
 </style>
 <title>
 $title
@@ -161,6 +118,8 @@ class BucketList:
 
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
+        self.cell_height = 24
+        self.cell_width = 24
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_room = {}
@@ -235,8 +194,8 @@ class GridPage:
             if not rooms:
                 continue
             rows += '<tr>'
-            rows += '<td rowspan="%d" height="%dpx">' % (
-                len(rooms), 25*len(rooms))
+            rows += '<td rowspan="%d" class="limit-%drow">' % (
+                len(rooms), len(rooms))
             rows += '<div class="level-name" width="20px">'
             rows += level.name
             rows += " (%s)" % level.short_name
@@ -258,11 +217,32 @@ class GridPage:
 
     def write(self):
         fh = open(self.get_file_name(), 'wt')
+        css = Template(css_template)
+        sizes_dict = {}
+        for i in range(12):
+            sizes_dict['w_unit%d' % i] = '%dpx' % (i*self.cell_width)
+            sizes_dict['h_unit%d' % i] = '%dpx' % (i*self.cell_height)
+        css = css.substitute(sizes_dict)
+        for i in range(1, 5):
+            css += '''
+             .limit-%drow { 
+                overflow: hidden;
+                max-height: %dpx;
+             }
+             ''' % (i, self.cell_height*i)
+        for i in range(1, 13):
+            css += '''
+             .limit-%dcol { 
+                overflow: hidden;
+                max-width: %dpx;
+             }
+             ''' % (i, self.cell_width*i)
         contents = Template(main_template)
         contents = contents.substitute(title=self.get_title(),
                                        day=self.day_name,
                                        slice=self.time_range.name,
-                                       detail=self.get_table_rows())
+                                       detail=self.get_table_rows(),
+                                       css=css)
         fh.write(contents)
         fh.close()
 

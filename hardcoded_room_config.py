@@ -50,10 +50,6 @@ c = w1.add_room("Grand Ballroom C", "Grand C")
 d = w1.add_room("Grand Ballroom D", "Grand D")
 ComboRoom("Grand Ballroom AB", a, b)
 ComboRoom("Grand Ballroom CD", c, d)
-a = w1.add_room("Commonwealth Ballroom A", "Commonwealth A")
-b = w1.add_room("Commonwealth Ballroom B", "Commonwealth B")
-c = w1.add_room("Commonwealth Ballroom C", "Commonwealth C")
-ComboRoom("Commonwealth Ballroom ABC", a, b, c)
-#ComboRoom("Commonwealth Ballroom BC", b, c)
+w1.add_room("Commonwealth Ballroom ABC", "Commonwealth")
 
 

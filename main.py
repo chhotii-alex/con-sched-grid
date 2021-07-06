@@ -2,11 +2,25 @@
 
 import math
 import sys
+import threading
 from location import *
 import hardcoded_room_config
 from contime import *
 from grid_page import *
 import db_fetch
+
+class PageBuildingThread(threading.Thread):
+    def __init__(self, day, time_range, bucket):
+        super().__init__()
+        self.day = day
+        self.time_range = time_range
+        self.bucket = bucket
+
+    def run(self):
+        page = GridPage(self.day, self.time_range, self.bucket)
+        page.write()
+        page.open()
+        
 
 ''' Create a time bucket to hold sessions in each slice of each day.
 '''
@@ -26,6 +40,5 @@ for day_index in range(len(days)):
         bucket = page_content_buckets[day_index*len(time_ranges)+tr_index]
         if not bucket:
             continue # skip pages that would be totally empty
-        page = GridPage(day, time_range, bucket)
-        page.write()
-        page.open()
+        thread = PageBuildingThread(day, time_range, bucket)
+        thread.start()

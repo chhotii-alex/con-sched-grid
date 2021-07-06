@@ -55,8 +55,14 @@ class Session:
         return self.duration > 0 and \
             all(not r.is_suppressed() for r in self.get_rooms())
 
-    def page_number(self):
+    def first_page_number(self):
         result = len(time_range_names)*self.get_start_day_number() 
         result += math.floor(
             self.get_time_minute_of_day()/minutes_per_time_range)
+        return result
+
+    def last_page_number(self):
+        end_minutes = self.get_time_minute_of_day() + self.get_duration() - 1
+        result = len(time_range_names)*self.get_start_day_number() 
+        result += math.floor(end_minutes/minutes_per_time_range)
         return result

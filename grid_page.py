@@ -1,6 +1,7 @@
 import os
 from string import Template
 import location
+import contime
 
 css_template = '''
 body {
@@ -85,6 +86,23 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
+class SessionSubinterval:
+    def __init__(self, session, effective_duration):
+        self.session = session
+        self.effective_duration = effective_duration
+
+    def is_placeholder(self):
+        return self.session.is_placeholder()
+
+    def get_duration(self):
+        return self.effective_duration
+
+    def get_room_count(self):
+        return self.session.get_room_count()
+
+    def get_title(self):
+        return self.session.get_title()
+
 class BucketList:
     def __init__(self, time_range):
         self.time_range = time_range
@@ -95,6 +113,17 @@ class BucketList:
     def insert(self, session):
         bucket_number = self.time_range.index_for_time(
             session.get_time_minute_of_day())
+        # Session may have started before start of time range... on 
+        # previous day!
+        # TODO: this is brittle if we introduce non-equal time ranges
+        while bucket_number >= self.time_range.interval_count():
+            bucket_number -= self.time_range.interval_count()*contime.time_ranges_per_day
+        # Session may have started before start of time range.
+        if bucket_number < 0:
+            effective_duration = session.get_duration() + \
+                bucket_number*self.time_range.minutes_per_box
+            session = SessionSubinterval(session, effective_duration)
+            bucket_number = 0
         self.buckets[bucket_number].append(session)
 
     def get_schedule(self):

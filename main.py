@@ -15,7 +15,9 @@ page_content_buckets = [ [] for i in range(len(time_ranges)*len(days)) ]
 for session in db_fetch.get_session_data():
     if session.is_included_in_grid():
         session.get_location().set_used(True)
-        page_content_buckets[session.page_number()].append(session)
+        for page_number in range(session.first_page_number(), 
+                                 session.last_page_number()+1):
+            page_content_buckets[page_number].append(session)
 
 for day_index in range(len(days)):
     day = days[day_index]

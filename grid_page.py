@@ -73,18 +73,17 @@ $detail
 '''
 
 class Placeholder:
-    def __init__(self, time_minute_of_day, duration):
-        self.time_minute_of_day = time_minute_of_day
-        self.duration = duration
+    def __init__(self, session):
+        self.session = session
 
     def is_placeholder(self):
         return True
 
     def get_time_minute_of_day(self):
-        return self.time_minute_of_day
+        return self.session.get_time_minute_of_day()
 
     def get_duration(self):
-        return self.duration
+        return self.session.get_duration()
 
 class BucketList:
     def __init__(self, time_range):
@@ -133,8 +132,7 @@ class GridPage:
                         first = False
                     else:
                         self.sessions_per_section[section].insert(
-                            Placeholder(session.get_time_minute_of_day(),
-                                        session.get_duration()))
+                            Placeholder(session))
 
     def get_file_name(self):
         return "%s%s.html" % (self.day_name[0:3], self.time_range.name[0:4])

@@ -29,10 +29,11 @@ def ampm_str_to_minute(a_string):
         raise Exception("Mal-formed time specification: " + a_string)
     hour = int(m.group(1))
     minute = int(m.group(2))
-    if m.group(3) == 'PM':
+    if m.group(3) == 'AM':
         if hour == 12:
             hour = 0
-        else:
+    elif m.group(3) == 'PM':
+        if hour < 12:
             hour += 12
     return hour*60+minute
 
@@ -115,6 +116,7 @@ class PageTimeRange:
 time_range_names = ["Late Night",
                     "Morning/Afternoon",
                     "Evening"]
+time_ranges_per_day = len(time_range_names)
 
 minutes_per_time_range = 24*60/len(time_range_names)
 
@@ -123,6 +125,5 @@ Each is 8 hours, starting at midnight, 8 am, and 4 pm. '''
 time_ranges = [PageTimeRange(time_range_names[i], 
                              minutes_per_time_range*i, 
                              minutes_per_time_range*(i+1)) 
-          for i in range(3)]
-
+          for i in range(time_ranges_per_day)]
 

@@ -32,13 +32,15 @@ border-collapse: collapse;
 }
 .first-room {
 }
+.just-black {
+ background-color: black;
+ -webkit-print-color-adjust: exact;
+}
 .time-head {
  color: white;
  font-size: 9px;
  background-color: black;
  -webkit-print-color-adjust: exact;
- width: ${w_unit1};
- max-width: ${w_unit1}; 
 }
 .gray {
   background-color: #888888;
@@ -102,7 +104,8 @@ class SessionSubinterval:
         return self.session.get_room_count()
 
     def get_title(self):
-        return self.session.get_title()
+        return self.session.get_title() + \
+            " <i>(" + self.session.get_time_str() + ")</i>"
 
 class BucketList:
     def __init__(self, time_range):
@@ -225,11 +228,20 @@ class GridPage:
     def get_table_rows(self):
         rows = '''
         <table>
+        '''
+        rows += '''<tr>
+        <td colspan="2" width="200px" class="just-black"></td>
+        '''
+        for _ in range(self.time_range.interval_count()):
+            rows += '<td col-span="1" class="limit-1col just-black"> </td>'
+        rows += '</tr>'
+        rows += '''
         <tr>
         <td colspan="2" width="200px"></td>
         '''
         for time_str in self.time_range.time_strings():
-            rows += '<td class="time-head"><div class="time-head">'
+            rows += '<td class="time-head limit-1col" col-span="1">'
+            rows += '<div class="time-head">'
             rows += time_str
             rows += '</div></td>'
         rows += '''
@@ -299,8 +311,9 @@ class GridPage:
              .limit-%dcol { 
                 overflow: hidden;
                 max-width: %dpx;
+                width: %dpx;
              }
-             ''' % (i, self.cell_width*i)
+             ''' % (i, self.cell_width*i, self.cell_width*i)
         contents = Template(main_template)
         contents = contents.substitute(title=self.get_title(),
                                        day=self.day_name,

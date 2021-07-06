@@ -101,7 +101,7 @@ class PageTimeRange:
         for min in range(self.start, self.end, self.minutes_per_label):
             results.append(self.time_string_for_min(min))
             for _ in range(1, self.intervals_per_label()):
-                results.append(" ")
+                results.append("foo ")
         return results
 
     def interval_count(self):

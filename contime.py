@@ -89,6 +89,9 @@ class PageTimeRange:
             hour = math.floor(min/60)
             if hour >= 12:
                 ampm = 'p'
+            if hour == 0:
+                hour = 12
+            if hour > 12:
                 hour -= 12
             minute = min % 60
             return "%d:%02d%s" % (hour, minute, ampm)

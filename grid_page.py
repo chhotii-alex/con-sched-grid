@@ -146,7 +146,7 @@ class BucketList:
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
         self.cell_height = 21
-        self.cell_width = 24
+        self.cell_width = 26
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}

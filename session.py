@@ -6,7 +6,7 @@ class Session:
         self.day = data['day']
         self.time = data['time']
         self.duration = duration_str_to_minutes(data['duration'])
-        self.room_name = data['room']
+        self.location = gLocationLookup[data['room']]
         self.title = data['title']
         # We have other info on each session, but it's ignored for the
         # purpose of a grid.
@@ -22,7 +22,7 @@ class Session:
         return self.title
 
     def get_location(self):
-        return gLocationLookup[self.room_name]
+        return self.location
 
     def get_level(self):
         return self.get_location().get_level()

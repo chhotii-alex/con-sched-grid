@@ -1,4 +1,5 @@
 import os
+from multiprocessing import Process, Pipe
 from string import Template
 import location
 import contime
@@ -143,6 +144,36 @@ class BucketList:
             schedule.append( (empty_count, []) )
         return schedule
 
+def get_detail_for_section(bucket_list, interval_max):
+    results = ''
+    curr_interval = 0
+    for interval, sessions in bucket_list.get_schedule():
+        if sessions and sessions[0].is_placeholder():
+            continue
+        if sessions:
+            class_name = 'schedule_item'
+        else:
+            class_name = 'gray'
+        if curr_interval + interval >= interval_max:
+            interval = interval_max - curr_interval
+        room_count = 1
+        if sessions:
+            room_count = sessions[0].get_room_count()
+        results += '<td class="%s" colspan="%d" rowspan="%d">' % (
+            class_name, interval, room_count)
+        results += '<div class="limit-%dcol limit-%drow">' % (
+            interval, room_count)
+        results += '; '.join([s.get_title() for s in sessions])
+        results += '</div></td>'
+        curr_interval += interval
+    return results
+
+def multiprocess_details_for_section(connection):
+    data = connection.recv()
+    results = get_detail_for_section(data[0], data[1])
+    connection.send(results)
+    connection.close()
+
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
         self.cell_height = 21
@@ -170,29 +201,15 @@ class GridPage:
         return "Grid for %s %s" % (self.day_name, self.time_range.name)
 
     def get_detail_for_section(self, section):
-        results = ''
         bucket_list = self.sessions_per_section[section]
         interval_max = self.time_range.interval_count()
-        curr_interval = 0
-        for interval, sessions in bucket_list.get_schedule():
-            if sessions and sessions[0].is_placeholder():
-                continue
-            if sessions:
-                class_name = 'schedule_item'
-            else:
-                class_name = 'gray'
-            if curr_interval + interval >= interval_max:
-                interval = interval_max - curr_interval
-            room_count = 1
-            if sessions:
-                room_count = sessions[0].get_room_count()
-            results += '<td class="%s" colspan="%d" rowspan="%d">' % (
-                class_name, interval, room_count)
-            results += '<div class="limit-%dcol limit-%drow">' % (
-                interval, room_count)
-            results += '; '.join([s.get_title() for s in sessions])
-            results += '</div></td>'
-            curr_interval += interval
+        parent_connection, child_connection = Pipe()
+        p = Process(target=multiprocess_details_for_section, 
+                    args=(child_connection,))
+        p.start()
+        parent_connection.send([bucket_list, interval_max])
+        results = parent_connection.recv()
+        p.join()
         return results
 
     def get_table_rows(self):

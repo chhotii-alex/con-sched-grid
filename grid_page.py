@@ -176,6 +176,7 @@ def multiprocess_details_for_section(connection):
 
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
+        self.connection_dictionary = None
         self.cell_height = 21
         self.cell_width = 26
         self.day_name = day_name
@@ -200,7 +201,11 @@ class GridPage:
     def get_title(self):
         return "Grid for %s %s" % (self.day_name, self.time_range.name)
 
-    def get_detail_for_section(self, section):
+    def prime_detail_for_section(self, section):
+        if self.connection_dictionary is None:
+            self.connection_dictionary = {}
+        if section in self.connection_dictionary:
+            return
         bucket_list = self.sessions_per_section[section]
         interval_max = self.time_range.interval_count()
         parent_connection, child_connection = Pipe()
@@ -208,8 +213,13 @@ class GridPage:
                     args=(child_connection,))
         p.start()
         parent_connection.send([bucket_list, interval_max])
+        self.connection_dictionary[section] = (parent_connection, child_connection)
+
+    def get_detail_for_section(self, section):
+        self.prime_detail_for_section(section)
+        (parent_connection, child_connection) = self.connection_dictionary[section]
         results = parent_connection.recv()
-        p.join()
+        self.connection_dictionary.pop(section, None)
         return results
 
     def get_table_rows(self):
@@ -230,21 +240,25 @@ class GridPage:
             rooms = level.get_used_rooms()
             if not rooms:
                 continue
-            sections = level.get_used_sections()
             first_room = True
             for room in rooms:
-                first_section = True
-                for section in room.get_sections():
+                sections = room.get_sections()
+                for i in range(len(sections)):
+                    if i == 0:
+                        self.prime_detail_for_section(sections[0])
+                    if i < len(sections)-1:
+                        self.prime_detail_for_section(sections[i+1])
+                    section = sections[i]
                     rows += '<tr>'
                     if first_room:
                         rows += '<td rowspan="%d" class="limit-%drow">' % (
-                            len(sections), len(rooms))
+                            len(level.get_used_sections()), len(rooms))
                         rows += '<div class="level-name" width="20px">'
                         rows += level.name
                         rows += " (%s)" % level.short_name
                         rows += '</div>'
                         rows += '</td>'
-                    if first_section:
+                    if i == 0:
                         if first_room:
                             class_string = 'first_room'
                         else:
@@ -255,7 +269,6 @@ class GridPage:
                             len(room.get_sections()))
                         rows += str(room)
                         rows += '</div></td>'
-                        first_section = False
                     rows += self.get_detail_for_section(section)
                     rows += '</tr>\n'
                 first_room = False

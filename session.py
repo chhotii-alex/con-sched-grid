@@ -32,7 +32,8 @@ class Session:
     def get_rooms(self):
         return self.get_location().get_rooms()
 
-    
+    def get_sections(self):
+        return self.get_location().get_sections()
 
     def get_room_count(self):
         return len(self.get_rooms())

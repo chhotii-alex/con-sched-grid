@@ -23,13 +23,12 @@ border-collapse: collapse;
  text-align: center;
 }
 .room-name {
- border: None;
+ border: 1px solid black;
+ text-align: right;
  font-size: 11px;
  width: ${w_unit4};
- height: ${h_unit1};
 }
 .first-room {
- border-top: 1px solid black;
 }
 .time-head {
  color: white;
@@ -45,7 +44,7 @@ border-collapse: collapse;
 }
 .schedule_item {
   font-family: 'Times New Roman', serif;
-  font-size: 12px;
+  font-size: 10px;
 }
 .event-name {
 }
@@ -118,25 +117,22 @@ class BucketList:
 
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
-        self.cell_height = 24
+        self.cell_height = 21
         self.cell_width = 24
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}
         for section in location.get_used_sections():
             self.sessions_per_section[section] = BucketList(time_range)
-        self.sessions_per_room = {}
-        for room in location.get_used_rooms():
-            self.sessions_per_room[room] = BucketList(time_range)
         for session in sessions:
             first = True
-            for room in session.get_rooms():
-                if room.should_display():
+            for section in session.get_sections():
+                if section in self.sessions_per_section:
                     if first:
-                        self.sessions_per_room[room].insert(session)
+                        self.sessions_per_section[section].insert(session)
                         first = False
                     else:
-                        self.sessions_per_room[room].insert(
+                        self.sessions_per_section[section].insert(
                             Placeholder(session.get_time_minute_of_day(),
                                         session.get_duration()))
 
@@ -146,15 +142,9 @@ class GridPage:
     def get_title(self):
         return "Grid for %s %s" % (self.day_name, self.time_range.name)
 
-    def get_detail_for_room(self, room, is_first):
-        if is_first:
-            class_string = 'first-room'
-        else:
-            class_string = ''
-        results = '<td class="room-name %s"><div class="room-name">' % (class_string)
-        results += str(room)
-        results += '</div></td>'
-        bucket_list = self.sessions_per_room[room]
+    def get_detail_for_section(self, section):
+        results = ''
+        bucket_list = self.sessions_per_section[section]
         interval_max = self.time_range.interval_count()
         curr_interval = 0
         for interval, sessions in bucket_list.get_schedule():
@@ -197,20 +187,34 @@ class GridPage:
             if not rooms:
                 continue
             sections = level.get_used_sections()
-            first = True
+            first_room = True
             for room in rooms:
-                rows += '<tr>'
-                if first:
-                    rows += '<td rowspan="%d" class="limit-%drow">' % (
-                        len(rooms), len(rooms))
-                    rows += '<div class="level-name" width="20px">'
-                    rows += level.name
-                    rows += " (%s)" % level.short_name
-                    rows += '</div>'
-                    rows += '</td>'
-                    first = False
-                rows += self.get_detail_for_room(room, False)
-                rows += '</tr>'
+                first_section = True
+                for section in room.get_sections():
+                    rows += '<tr>'
+                    if first_room:
+                        rows += '<td rowspan="%d" class="limit-%drow">' % (
+                            len(sections), len(rooms))
+                        rows += '<div class="level-name" width="20px">'
+                        rows += level.name
+                        rows += " (%s)" % level.short_name
+                        rows += '</div>'
+                        rows += '</td>'
+                    if first_section:
+                        if first_room:
+                            class_string = 'first_room'
+                        else:
+                            class_string = ''
+                        rows += '<td class="room-name %s" rowspan="%d">' % (
+                            class_string, len(room.get_sections()))
+                        rows += '<div limit_%drow">' % (
+                            len(room.get_sections()))
+                        rows += str(room)
+                        rows += '</div></td>'
+                        first_section = False
+                    rows += self.get_detail_for_section(section)
+                    rows += '</tr>\n'
+                first_room = False
         rows += '''
         </tbody>
         </table>
@@ -230,8 +234,9 @@ class GridPage:
              .limit-%drow { 
                 overflow: hidden;
                 max-height: %dpx;
+                height: %dpx;
              }
-             ''' % (i, self.cell_height*i)
+             ''' % (i, self.cell_height*i, self.cell_height*i)
         for i in range(1, 13):
             css += '''
              .limit-%dcol { 

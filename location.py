@@ -36,6 +36,9 @@ class Section(Location):
     def get_rooms(self):
         return self.room.get_rooms()
 
+    def get_sections(self):
+        return [self]
+
 class Room(Location):
     def __init__(self, level, name, short_name=None):
         super().__init__(name, short_name)
@@ -71,6 +74,9 @@ class Room(Location):
             return self.sections
         else:
             return [self]
+
+    def get_sections(self):
+        return self.get_used_sections()
 
 class Level(Location):
     def __init__(self, name, short_name=None):
@@ -110,6 +116,9 @@ class ComboRoom(Location):
 
     def get_rooms(self):
         return self.rooms
+
+    def get_sections(self):
+        return self.get_rooms()
 
 def get_used_rooms():
     results = []

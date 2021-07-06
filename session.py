@@ -44,6 +44,9 @@ class Session:
     def get_start_day(self):
         return days[self.get_start_day_number()]
 
+    def get_time_str(self):
+        return self.time.replace(" ", "").lower()
+
     def get_time_minute_of_day(self):
         return ampm_str_to_minute(self.time)
 

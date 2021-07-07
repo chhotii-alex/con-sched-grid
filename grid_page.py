@@ -260,19 +260,17 @@ class GridPage:
         '''
         for level in location.gLevelList:
             rooms = level.get_used_rooms()
-            if not rooms:
-                continue
-            first_room = True
-            for room in rooms:
+            for room_index in range(len(rooms)):
+                room = rooms[room_index]
                 sections = room.get_sections()
-                for i in range(len(sections)):
-                    if i == 0:
+                for section_index in range(len(sections)):
+                    if section_index == 0:
                         self.prime_detail_for_section(sections[0])
-                    if i < len(sections)-1:
-                        self.prime_detail_for_section(sections[i+1])
-                    section = sections[i]
+                    if section_index < len(sections)-1:
+                        self.prime_detail_for_section(sections[section_index+1])
+                    section = sections[section_index]
                     rows += '<tr>'
-                    if first_room:
+                    if room_index == 0:
                         rows += '<td rowspan="%d" class="limit-%drow">' % (
                             len(level.get_used_sections()), len(rooms))
                         rows += '<div class="level-name" width="20px">'
@@ -280,8 +278,8 @@ class GridPage:
                         rows += " (%s)" % level.short_name
                         rows += '</div>'
                         rows += '</td>'
-                    if i == 0:
-                        if first_room:
+                    if section_index == 0:
+                        if room_index == 0:
                             class_string = 'first_room'
                         else:
                             class_string = ''
@@ -293,7 +291,6 @@ class GridPage:
                         rows += '</div></td>'
                     rows += self.get_detail_for_section(section)
                     rows += '</tr>\n'
-                first_room = False
         rows += '''
         </tbody>
         </table>

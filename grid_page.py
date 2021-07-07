@@ -259,15 +259,15 @@ class GridPage:
         <tbody>
         '''
         for level in location.gLevelList:
+            for room in level.get_used_rooms():
+                for section in room.get_sections():
+                    self.prime_detail_for_section(section)
+        for level in location.gLevelList:
             rooms = level.get_used_rooms()
             for room_index in range(len(rooms)):
                 room = rooms[room_index]
                 sections = room.get_sections()
                 for section_index in range(len(sections)):
-                    if section_index == 0:
-                        self.prime_detail_for_section(sections[0])
-                    if section_index < len(sections)-1:
-                        self.prime_detail_for_section(sections[section_index+1])
                     section = sections[section_index]
                     rows += '<tr>'
                     if room_index == 0:

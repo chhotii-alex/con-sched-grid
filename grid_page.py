@@ -206,7 +206,7 @@ class GridPage:
                             Placeholder(session))
 
     def get_file_name(self):
-        return "%s%s.html" % (self.day_name[0:3], self.time_range.name[0:4])
+        return "%s%s.html" % (self.day_name[0:3], self.time_range.name[0:3])
 
     def get_title(self):
         return "Grid for %s %s" % (self.day_name, self.time_range.name)

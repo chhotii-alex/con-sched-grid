@@ -114,7 +114,7 @@ class PageTimeRange:
     def intervals_for_duration(self, dur):
         return math.ceil(dur/self.minutes_per_box)
 
-time_range_names = ["Late Night",
+time_range_names = ["Wee Hours",
                     "Morning/Afternoon",
                     "Evening"]
 time_ranges_per_day = len(time_range_names)

@@ -36,6 +36,9 @@ border-collapse: collapse;
  background-color: black;
  -webkit-print-color-adjust: exact;
 }
+.no-border {
+  border: 0;
+}
 .time-head {
  color: white;
  font-size: 9px;
@@ -236,7 +239,7 @@ class GridPage:
         <table>
         '''
         rows += '''<tr>
-        <td colspan="2" width="200px" class="just-black"></td>
+        <td colspan="2" width="200px" class="no-border"></td>
         '''
         for _ in range(self.time_range.interval_count()):
             rows += '''<td colspan="1" class="limit-1col just-black"> </td>
@@ -244,7 +247,7 @@ class GridPage:
         rows += '</tr>'
         rows += '''
         <tr>
-        <td colspan="2" width="200px"></td>
+        <td colspan="2" width="200px" class="no-border" ></td>
         '''
         for time_str in self.time_range.time_strings():
             rows += '<td class="time-head limit-%dcol" colspan="%d">' % (

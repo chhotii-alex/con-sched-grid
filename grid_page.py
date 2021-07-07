@@ -233,17 +233,21 @@ class GridPage:
         <td colspan="2" width="200px" class="just-black"></td>
         '''
         for _ in range(self.time_range.interval_count()):
-            rows += '<td col-span="1" class="limit-1col just-black"> </td>'
+            rows += '''<td colspan="1" class="limit-1col just-black"> </td>
+                 '''
         rows += '</tr>'
         rows += '''
         <tr>
         <td colspan="2" width="200px"></td>
         '''
         for time_str in self.time_range.time_strings():
-            rows += '<td class="time-head limit-1col" col-span="1">'
+            rows += '<td class="time-head limit-%dcol" colspan="%d">' % (
+                self.time_range.intervals_per_label(),
+                self.time_range.intervals_per_label())
             rows += '<div class="time-head">'
             rows += time_str
-            rows += '</div></td>'
+            rows += '''</div></td>
+                  '''
         rows += '''
         </tr>
         <tbody>

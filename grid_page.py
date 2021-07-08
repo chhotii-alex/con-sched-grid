@@ -8,6 +8,10 @@ css_template = '''
 body {
   font-family: Arial, sans-serif;
 }
+.page-third {
+  width: 33%;
+  display: inline-block;
+}
 table {
  table-layout: fixed;
  border: 1px solid black;
@@ -55,9 +59,13 @@ border-collapse: collapse;
 }
 .event-name {
 }
-.center {
+.page-title {
 text-align: center;
 font-weight: bold;
+}
+.version {
+  text-align: right;
+  font-size: 8px;
 }
 '''
 
@@ -73,7 +81,17 @@ $title
 </title>
 </head>
 <body>
-<div class="center">$day $slice</div>
+<div width="100%">
+   <span class="page-third event-name" >
+        $event
+   </span>
+   <span class="page-third page-title">
+        $day $slice
+   </span>
+   <span class="page-third version">
+        $zambia_ver
+   </span>
+</div>
 $detail
 </body>
 </html>
@@ -329,7 +347,10 @@ class GridPage:
                                        day=self.day_name,
                                        slice=self.time_range.name,
                                        detail=self.get_table_rows(),
-                                       css=css)
+                                       css=css,
+                                       zambia_ver="preliminary", # TODO
+                                       event="Arisia 2020" # TODO; hardcode for now
+                                       )
         fh.write(contents)
         fh.close()
 

@@ -2,6 +2,7 @@ import os
 import threading, queue
 from string import Template
 import location
+import bucket
 import contime
 
 css_template = '''
@@ -128,44 +129,55 @@ class SessionSubinterval:
         return self.session.get_title() + \
             " <i>(" + self.session.get_time_str() + ")</i>"
 
-class BucketList:
+class TimeSlotBucket(bucket.Bucket):
+    def __init__(self):
+        super().__init__()
+
+class TimeSlotBucketArray(bucket.BucketArray):
     def __init__(self, time_range):
         self.time_range = time_range
-        self.buckets = []
-        for _ in range(time_range.interval_count()):
-            self.buckets.append([]) 
+        super().__init__()
 
-    def insert(self, session):
-        bucket_number = self.time_range.index_for_time(
+    def make_buckets(self):
+        for _ in range(self.time_range.interval_count()):
+            yield TimeSlotBucket()
+
+    def index_range_for_item(self, session):
+        start_bucket_number = self.time_range.index_for_time(
             session.get_time_minute_of_day())
+        end_bucket_number = self.time_range.index_for_time(
+            session.get_time_minute_of_day() + session.get_duration() - 1)
         # Session may have started before start of time range... on 
         # previous day!
-        # TODO: this is brittle if we introduce non-equal time ranges
-        while bucket_number >= self.time_range.interval_count():
-            bucket_number -= self.time_range.interval_count()*contime.time_ranges_per_day
+        while start_bucket_number >= self.time_range.interval_count():
+            start_bucket_number -= self.time_range.intervals_per_day()
+            end_bucket_number -= self.time_range.intervals_per_day()
+        return (start_bucket_number, end_bucket_number)
+
+    def start_index_for_item(self, session):
+        start_bucket_number, end_bucket_number = self. index_range_for_item(
+            session)
         # Session may have started before start of time range.
-        if bucket_number < 0:
-            effective_duration = session.get_duration() + \
-                bucket_number*self.time_range.minutes_per_box
-            session = SessionSubinterval(session, effective_duration)
-            bucket_number = 0
-        self.buckets[bucket_number].append(session)
+        if start_bucket_number < 0:
+            start_bucket_number = 0
+        return start_bucket_number
+
+    def end_index_for_item(self, session):
+        start_bucket_number, end_bucket_number = self. index_range_for_item(
+            session)
+        if end_bucket_number >= self.time_range.interval_count():
+            end_bucket_number = self.time_range.interval_count() - 1
+        return end_bucket_number
 
     def get_schedule(self):
+        prev_bucket = None
         schedule = []
-        empty_count = 0
         for bucket in self.buckets:
-            if len(bucket):
-                if empty_count > 0:
-                    schedule.append( (empty_count, []) )
-                intervals = self.time_range.intervals_for_duration(
-                    bucket[0].get_duration())
-                schedule.append( (intervals, bucket) )
-                empty_count = 1 - intervals
+            if prev_bucket is not None and bucket.contains_same_contents(prev_bucket):
+                schedule[-1][0] += 1
             else:
-                empty_count += 1
-        if empty_count > 0:
-            schedule.append( (empty_count, []) )
+                schedule.append( [1, bucket.get_items()] )
+            prev_bucket = bucket
         return schedule
 
 class WorkerThread(threading.Thread):
@@ -214,16 +226,17 @@ class GridPage:
         self.time_range = time_range
         self.sessions_per_section = {}
         for section in location.get_used_sections():
-            self.sessions_per_section[section] = BucketList(time_range)
+            self.sessions_per_section[section] = TimeSlotBucketArray(
+                time_range)
         for session in sessions:
             first = True
             for section in session.get_sections():
                 if section in self.sessions_per_section:
                     if first:
-                        self.sessions_per_section[section].insert(session)
+                        self.sessions_per_section[section].add_item(session)
                         first = False
                     else:
-                        self.sessions_per_section[section].insert(
+                        self.sessions_per_section[section].add_item(
                             Placeholder(session))
 
     def get_file_name(self):

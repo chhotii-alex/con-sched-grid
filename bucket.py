@@ -9,6 +9,23 @@ class Bucket:
     def is_empty(self):
         return len(self.items) == 0
 
+    def __len__(self):
+        return len(self.items)
+
+    def __getitem__(self, key):
+        return self.items[key]
+
+    def get_items(self):
+        return self.items
+
+    def contains_same_contents(self, other_bucket):
+        if len(self) != len(other_bucket):
+            return False
+        for i in range(len(self)):
+            if self[i] != other_bucket[i]:
+                return False
+        return True
+
 class BucketArray:
     def __init__(self):
         self.buckets = []
@@ -22,7 +39,7 @@ class BucketArray:
         raise Exception("Abstract; must override start_index_for_item")
 
     def end_index_for_item(self, item):
-        return start_index_for_item(self, item)
+        return self.start_index_for_item(item)
 
     def add_item(self, session):
         first_bucket_number = self.start_index_for_item(session)

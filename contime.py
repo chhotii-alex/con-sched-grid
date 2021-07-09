@@ -115,6 +115,9 @@ class PageTimeRange:
     def intervals_for_duration(self, dur):
         return math.ceil(dur/self.minutes_per_box)
 
+    def intervals_per_day(self):
+        return int(24*60/self.minutes_per_box)
+
 time_range_names = ["Wee Hours",
                     "Morning/Afternoon",
                     "Evening"]

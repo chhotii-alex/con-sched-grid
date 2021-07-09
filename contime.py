@@ -1,6 +1,7 @@
 
 import math
 import re
+import bucket
 
 '''
 N.B. that we hard-code the assumption that there's only one date within
@@ -128,24 +129,17 @@ time_ranges = [PageTimeRange(time_range_names[i],
                              minutes_per_time_range*(i+1)) 
           for i in range(time_ranges_per_day)]
 
-class PageBucket:
+class PageBucket(bucket.Bucket):
     def __init__(self, day, time_range):
+        super().__init__()
         self.day = day
         self.time_range = time_range
-        self.items = []
 
-    def add_item(self, item):
-        self.items.append(item)
-
-    def is_empty(self):
-        return len(self.items) == 0
-
-class PageBucketArray:
-    def __init__(self):
-        self.buckets = []
+class PageBucketArray(bucket.BucketArray):
+    def make_buckets(self):
         for day in days:
             for time_range in time_ranges:
-                self.buckets.append(PageBucket(day, time_range))
+                yield PageBucket(day, time_range)
 
     def start_index_for_item(self, session):
         start_day_number = day_number[session.get_day()]
@@ -162,12 +156,3 @@ class PageBucketArray:
         result += math.floor(end_minutes/minutes_per_time_range)
         return result        
 
-    def add_item(self, session):
-        first_bucket_number = self.start_index_for_item(session)
-        last_bucket_number = self.end_index_for_item(session)
-        for bucket_number in range(first_bucket_number,
-                                 last_bucket_number+1):
-            self.buckets[bucket_number].add_item(session)
-
-    def get_buckets(self):
-        return self.buckets

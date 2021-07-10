@@ -278,7 +278,7 @@ class GridPage:
                             len(level.get_used_sections()), len(rooms))
                         rows += '<div class="level-name" width="20px">'
                         rows += level.name
-                        rows += " (%s)" % level.short_name
+                        rows += " (%s)" % level.get_short_name()
                         rows += '</div>'
                         rows += '</td>'
                     if section_index == 0:

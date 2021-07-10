@@ -111,24 +111,6 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
-class SessionSubinterval:
-    def __init__(self, session, effective_duration):
-        self.session = session
-        self.effective_duration = effective_duration
-
-    def is_placeholder(self):
-        return self.session.is_placeholder()
-
-    def get_duration(self):
-        return self.effective_duration
-
-    def get_room_count(self):
-        return self.session.get_room_count()
-
-    def get_title(self):
-        return self.session.get_title() + \
-            " <i>(" + self.session.get_time_str() + ")</i>"
-
 class TimeSlotBucketArray(bucket.BucketArray):
     def __init__(self, time_range):
         self.time_range = time_range

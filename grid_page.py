@@ -1,6 +1,7 @@
 import os
 import threading, queue
 from string import Template
+import autosort
 import location
 import bucket
 import contime
@@ -118,7 +119,7 @@ class TimeSlotBucketArray(bucket.BucketArray):
 
     def make_buckets(self):
         for _ in range(self.time_range.interval_count()):
-            yield bucket.Bucket()
+            yield bucket.Bucket(autosort.AutoSortedArray())
 
     def index_range_for_item(self, session):
         start_bucket_number = self.time_range.index_for_time(

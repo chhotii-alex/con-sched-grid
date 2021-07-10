@@ -1,7 +1,9 @@
 
 class Bucket:
-    def __init__(self):
-        self.items = []
+    def __init__(self, container=None):
+        if container is None:
+            container = []
+        self.items = container
 
     def add_item(self, item):
         self.items.append(item)

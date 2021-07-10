@@ -1,6 +1,10 @@
-gLocationLookup = {}
-gLevelList = []
+from functools import total_ordering
+import autosort
 
+gLocationLookup = {}
+gLevelList = autosort.AutoSortedArray()
+
+@total_ordering
 class Location:
     def __init__(self, name, short_name = None):
         global gLocationLookup
@@ -16,19 +20,32 @@ class Location:
     def __str__(self):
         return self.short_name
 
-    def get_level(self):
-        raise Exception("Abstract method not defined")
+    def __repr__(self):
+        return str(self)
+
+    def get_short_name(self):
+        return self.short_name
 
     def get_rooms(self):
         return [self]
+
+    def __eq__(self, other):
+        if self.name != other.name:
+            return False
+        return True
+
+    def __lt__(self, other):
+        if self.name < other.name:
+            return True
+        return False
+
+    def __hash__(self):
+        return hash(self.name)
 
 class Section(Location):
     def __init__(self, room, name):
         super().__init__(name)
         self.room = room
-
-    def get_level(self):
-        return self.room.get_level()
 
     def set_used(self, flag):
         self.room.set_used(flag)
@@ -39,14 +56,29 @@ class Section(Location):
     def get_sections(self):
         return [self]
 
+@total_ordering
 class Room(Location):
-    def __init__(self, level, name, short_name=None):
+    def __init__(self, name, usage="", short_name=None):
         super().__init__(name, short_name)
-        self.level = level
+        self.usage = usage
         self.is_used = False
         self.suppress_flag = False
         # Most rooms do not have named sections:
-        self.sections = None        
+        self.sections = None
+        # Most rooms do not take part in combinations:
+        self.combos = []
+
+    def set_level(self, level):
+        self.level = level
+
+    def get_level(self):
+        return self.level
+
+    def add_combo_membership(self, combo):
+        self.combos.append(combo)
+
+    def get_combos(self):
+        return self.combos
 
     def suppress(self):
         self.suppress_flag = True
@@ -57,11 +89,8 @@ class Room(Location):
     def add_section(self, section_name):
         s = Section(self, section_name)
         if not self.sections:
-            self.sections = []
+            self.sections = autosort.AutoSortedArray()
         self.sections.append(s)
-
-    def get_level(self):
-        return self.level
 
     def set_used(self, flag):
         self.is_used = flag
@@ -78,20 +107,31 @@ class Room(Location):
     def get_sections(self):
         return self.get_used_sections()
 
+    def __lt__(self, other):
+        all_combos = self.combos + other.get_combos()
+        all_combos.sort()
+        all_combos.reverse()
+        for c in all_combos:
+            if c not in self.combos:
+                return True
+            if c not in other.get_combos():
+                return False
+        if self.usage != other.usage:
+            return self.usage < other.usage
+        return self.name < other.name
+
+
 class Level(Location):
     def __init__(self, name, short_name=None):
         super().__init__(name, short_name)
         global gLevelList
         gLevelList.append(self)
-        self.rooms = []
+        self.rooms = autosort.AutoSortedArray()
 
-    def add_room(self, room_name, room_short_name=None):
-        room = Room(self, room_name, room_short_name)
+    def add_room(self, room):
         self.rooms.append(room)
+        room.set_level(self)
         return room
-
-    def get_level(self):
-        return self
 
     def get_used_rooms(self):
         return [r for r in self.rooms if r.should_display()]
@@ -105,10 +145,14 @@ class Level(Location):
 class ComboRoom(Location):
     def __init__(self, name, *args):
         super().__init__(name, None)
-        self.rooms = args
+        self.rooms = []
+        self.rooms.extend(args)
+        self.rooms.sort()
+        for r in self.rooms:
+            r.add_combo_membership(self)
 
-    def get_level(self):
-        return self.rooms[0].get_level()
+    def __repr__(self):
+        return "Combo named " + self.name
 
     def set_used(self, flag):
         for room in self.rooms:

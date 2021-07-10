@@ -1,3 +1,4 @@
+from functools import total_ordering
 from contime import *
 from location import *
 
@@ -58,3 +59,21 @@ class Session:
         return self.duration > 0 and \
             all(not r.is_suppressed() for r in self.get_rooms())
 
+    def __key(self):
+        return (day_number[self.day],
+                self.get_time_minute_of_day(),
+                self.get_duration(),
+                str(self.get_location()),
+                self.get_title() )
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        if isinstance(other, Session):
+            result = self.__key() == other.__key()
+            return result
+        return NotImplemented
+
+    def __lt__(self, other): 
+        return self.__key() < other.__key()

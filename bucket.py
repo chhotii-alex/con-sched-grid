@@ -35,15 +35,12 @@ class BucketArray:
     def make_buckets(self):
         raise Exception("Abstract; must override make_buckets")
 
-    def start_index_for_item(self, item):
-        raise Exception("Abstract; must override start_index_for_item")
-
-    def end_index_for_item(self, item):
-        return self.start_index_for_item(item)
+    def index_range_for_item(self, item):
+        raise Exception("Abstract; must override index_range_for_item")
 
     def add_item(self, session):
-        first_bucket_number = self.start_index_for_item(session)
-        last_bucket_number = self.end_index_for_item(session)
+        first_bucket_number, last_bucket_number  = \
+            self.index_range_for_item(session)
         for bucket_number in range(first_bucket_number,
                                  last_bucket_number+1):
             self.buckets[bucket_number].add_item(session)

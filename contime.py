@@ -159,3 +159,6 @@ class PageBucketArray(bucket.BucketArray):
         result += math.floor(end_minutes/minutes_per_time_range)
         return result        
 
+    def index_range_for_item(self, session):
+        return (self.start_index_for_item(session),
+                self.end_index_for_item(session) )

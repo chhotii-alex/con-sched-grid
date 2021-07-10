@@ -129,10 +129,6 @@ class SessionSubinterval:
         return self.session.get_title() + \
             " <i>(" + self.session.get_time_str() + ")</i>"
 
-class TimeSlotBucket(bucket.Bucket):
-    def __init__(self):
-        super().__init__()
-
 class TimeSlotBucketArray(bucket.BucketArray):
     def __init__(self, time_range):
         self.time_range = time_range
@@ -140,7 +136,7 @@ class TimeSlotBucketArray(bucket.BucketArray):
 
     def make_buckets(self):
         for _ in range(self.time_range.interval_count()):
-            yield TimeSlotBucket()
+            yield bucket.Bucket()
 
     def index_range_for_item(self, session):
         start_bucket_number = self.time_range.index_for_time(
@@ -152,22 +148,13 @@ class TimeSlotBucketArray(bucket.BucketArray):
         while start_bucket_number >= self.time_range.interval_count():
             start_bucket_number -= self.time_range.intervals_per_day()
             end_bucket_number -= self.time_range.intervals_per_day()
-        return (start_bucket_number, end_bucket_number)
-
-    def start_index_for_item(self, session):
-        start_bucket_number, end_bucket_number = self. index_range_for_item(
-            session)
         # Session may have started before start of time range.
         if start_bucket_number < 0:
             start_bucket_number = 0
-        return start_bucket_number
-
-    def end_index_for_item(self, session):
-        start_bucket_number, end_bucket_number = self. index_range_for_item(
-            session)
+        # Session may go beyond this page's time
         if end_bucket_number >= self.time_range.interval_count():
             end_bucket_number = self.time_range.interval_count() - 1
-        return end_bucket_number
+        return (start_bucket_number, end_bucket_number)
 
     def get_schedule(self):
         prev_bucket = None

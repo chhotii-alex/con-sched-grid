@@ -149,7 +149,7 @@ class TimeSlotBucketArray(bucket.BucketArray):
             prev_bucket = bucket
         return schedule
 
-class WorkerThread(threading.Thread):
+class RowDetailThread(threading.Thread):
     def __init__(self, q, bucket_list, interval_max):
         super().__init__()
         self.q = q
@@ -222,7 +222,7 @@ class GridPage:
         bucket_list = self.sessions_per_section[section]
         interval_max = self.time_range.interval_count()
         q = queue.Queue() 
-        thread = WorkerThread(q, bucket_list, interval_max)
+        thread = RowDetailThread(q, bucket_list, interval_max)
         thread.start()
         self.connection_dictionary[section] = q
 

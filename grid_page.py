@@ -177,7 +177,8 @@ class RowDetailThread(threading.Thread):
             results += '<div class="limit-%dcol limit-%drow">' % (
                 interval, room_count)
             results += '; '.join([s.get_title() for s in sessions])
-            results += '</div></td>'
+            results += '''</div></td>
+            '''
             curr_interval += interval
         return results
 
@@ -281,7 +282,8 @@ class GridPage:
                         rows += level.name
                         rows += " (%s)" % level.get_short_name()
                         rows += '</div>'
-                        rows += '</td>'
+                        rows += '''</td>
+                         '''
                     if section_index == 0:
                         if room_index == 0:
                             class_string = 'first_room'
@@ -292,9 +294,11 @@ class GridPage:
                         rows += '<div limit_%drow">' % (
                             len(room.get_sections()))
                         rows += str(room)
-                        rows += '</div></td>'
+                        rows += '''</div></td>
+                        '''
                     rows += self.get_detail_for_section(section)
-                    rows += '</tr>\n'
+                    rows += '''</tr>
+                    '''
         rows += '''
         </tbody>
         </table>
@@ -309,22 +313,12 @@ class GridPage:
             sizes_dict['w_unit%d' % i] = '%dpx' % (i*self.cell_width)
             sizes_dict['h_unit%d' % i] = '%dpx' % (i*self.cell_height)
         css = css.substitute(sizes_dict)
-        for i in range(1, 5):
-            css += '''
-             .limit-%drow { 
-                overflow: hidden;
-                max-height: %dpx;
-                height: %dpx;
-             }
-             ''' % (i, self.cell_height*i, self.cell_height*i)
-        for i in range(1, 13):
-            css += '''
-             .limit-%dcol { 
-                overflow: hidden;
-                max-width: %dpx;
-                width: %dpx;
-             }
-             ''' % (i, self.cell_width*i, self.cell_width*i)
+        for i in range(1, 10):
+            css += '.limit-%drow {overflow:hidden;max-height:%dpx; height: %dpx;} ' % (
+                i, self.cell_height*i, self.cell_height*i)
+        for i in range(1, 30):
+            css += '.limit-%dcol {overflow: hidden;max-width: %dpx;width: %dpx;} ' % (
+                i, self.cell_width*i, self.cell_width*i)
         contents = Template(main_template)
         contents = contents.substitute(title=self.get_title(),
                                        day=self.day_name,

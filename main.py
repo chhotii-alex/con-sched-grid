@@ -15,11 +15,15 @@ class PageBuildingThread(threading.Thread):
         self.day = bucket.day
         self.time_range = bucket.time_range
         self.sessions = bucket.items
+        self.page = None
+
+    def make_page(self):
+        self.page = GridPage(self.day, self.time_range, self.sessions)
+        self.page.write()
 
     def run(self):
-        page = GridPage(self.day, self.time_range, self.sessions)
-        page.write()
-        page.open()
+        self.make_page()
+        self.page.open()
         
 
 class GridMaker:

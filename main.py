@@ -31,7 +31,13 @@ for session in db_fetch.get_session_data():
         session.get_location().set_used(True)
         contents.add_item(session)
 
+threads = []
 for bucket in contents.get_buckets():
     if not bucket.is_empty():
         thread = PageBuildingThread(bucket)
         thread.start()
+        threads.append(thread)
+
+for thread in threads:
+    thread.join()
+print("Done!")

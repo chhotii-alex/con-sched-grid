@@ -22,22 +22,36 @@ class PageBuildingThread(threading.Thread):
         page.open()
         
 
-''' Create a time bucket to hold sessions in each slice of each day.
-'''
-contents = PageBucketArray()
+class GridMaker:
+    def __init__(self):
+        self.contents = None
 
-for session in db_fetch.get_session_data():
-    if session.is_included_in_grid():
-        session.get_location().set_used(True)
-        contents.add_item(session)
+    def prep_data(self):
+        ''' Create a time bucket to hold sessions in each slice of each day.
+        '''
+        self.contents = PageBucketArray()
+        db = db_fetch.Database()
 
-threads = []
-for bucket in contents.get_buckets():
-    if not bucket.is_empty():
-        thread = PageBuildingThread(bucket)
-        thread.start()
-        threads.append(thread)
+        for session in db.get_session_data():
+            if session.is_included_in_grid():
+                session.get_location().set_used(True)
+                self.contents.add_item(session)
 
-for thread in threads:
-    thread.join()
-print("Done!")
+    def make_grids(self):
+        self.prep_data()
+
+        threads = []
+        for bucket in self.contents.get_buckets():
+            if not bucket.is_empty():
+                thread = PageBuildingThread(bucket)
+                thread.start()
+                threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+        print("Done!")
+
+if __name__ == "__main__":
+    my_grid_maker = GridMaker()
+    my_grid_maker.make_grids()
+

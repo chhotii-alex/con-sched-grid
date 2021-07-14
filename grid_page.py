@@ -229,7 +229,6 @@ class GridPage:
         self.connection_dictionary[section] = q
 
     def get_detail_for_section(self, section):
-        self.prime_detail_for_section(section)
         q = self.connection_dictionary[section]
         results = q.get()
         q.task_done()

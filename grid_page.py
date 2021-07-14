@@ -94,7 +94,9 @@ $title
         $zambia_ver
    </span>
 </div>
+$theader
 $detail
+$tfoot
 </body>
 </html>
 '''
@@ -157,7 +159,7 @@ class RowDetailThread(threading.Thread):
         self.bucket_list = bucket_list
         self.interval_max = interval_max
         
-    def get_detail_for_section(self, bucket_list, interval_max):
+    def get_cells_for_section(self, bucket_list, interval_max):
         results = ''
         curr_interval = 0
         for interval, sessions in bucket_list.get_schedule():
@@ -183,7 +185,7 @@ class RowDetailThread(threading.Thread):
         return results
 
     def run(self):
-        results = self.get_detail_for_section(self.bucket_list, 
+        results = self.get_cells_for_section(self.bucket_list, 
                                               self.interval_max)
         self.q.put(results)
         return
@@ -235,7 +237,7 @@ class GridPage:
         self.connection_dictionary.pop(section, None)
         return results
 
-    def get_table_rows(self):
+    def get_table_header(self):
         rows = '''
         <table>
         '''
@@ -262,6 +264,41 @@ class GridPage:
         </tr>
         <tbody>
         '''
+        return rows
+
+    def get_row_start(self, level, room, section, is_1st_room, 
+                      is_1st_section):
+        results = '<tr>'
+        if is_1st_room:
+            results += '<td rowspan="%d" class="limit-%drow">' % (
+                len(level.get_used_sections()), 
+                len(level.get_used_rooms()))
+            results += '<div class="level-name" width="20px">'
+            results += level.name
+            results += " (%s)" % level.get_short_name()
+            results += '</div>'
+            results += '''</td>
+             '''
+        if is_1st_section:
+            if is_1st_room:
+                class_string = 'first_room'
+            else:
+                class_string = ''
+            results += '<td class="room-name %s" rowspan="%d">' % (
+                class_string, len(room.get_sections()))
+            results += '<div limit_%drow">' % (
+                len(room.get_sections()))
+            results += str(room)
+            results += '''</div></td>
+            '''
+        return results
+
+    def get_row_end(self):
+        return '''</tr>
+               '''
+
+    def get_table_rows(self):
+        rows = ''
         for level in location.gLevelList:
             for room in level.get_used_rooms():
                 for section in room.get_sections():
@@ -273,36 +310,18 @@ class GridPage:
                 sections = room.get_sections()
                 for section_index in range(len(sections)):
                     section = sections[section_index]
-                    rows += '<tr>'
-                    if room_index == 0:
-                        rows += '<td rowspan="%d" class="limit-%drow">' % (
-                            len(level.get_used_sections()), len(rooms))
-                        rows += '<div class="level-name" width="20px">'
-                        rows += level.name
-                        rows += " (%s)" % level.get_short_name()
-                        rows += '</div>'
-                        rows += '''</td>
-                         '''
-                    if section_index == 0:
-                        if room_index == 0:
-                            class_string = 'first_room'
-                        else:
-                            class_string = ''
-                        rows += '<td class="room-name %s" rowspan="%d">' % (
-                            class_string, len(room.get_sections()))
-                        rows += '<div limit_%drow">' % (
-                            len(room.get_sections()))
-                        rows += str(room)
-                        rows += '''</div></td>
-                        '''
+                    rows += self.get_row_start(level, room, section,
+                                               (room_index == 0),
+                                               (section_index == 0))
                     rows += self.get_detail_for_section(section)
-                    rows += '''</tr>
-                    '''
-        rows += '''
+                    rows += self.get_row_end()
+        return rows
+
+    def get_table_foot(self):
+        return '''
         </tbody>
         </table>
         '''
-        return rows
 
     def write(self):
         fh = open(self.get_file_name(), 'wt')
@@ -322,7 +341,9 @@ class GridPage:
         contents = contents.substitute(title=self.get_title(),
                                        day=self.day_name,
                                        slice=self.time_range.name,
+                                       theader=self.get_table_header(),
                                        detail=self.get_table_rows(),
+                                       tfoot=self.get_table_foot(),
                                        css=css,
                                        zambia_ver="preliminary", # TODO
                                        event="Arisia 2020" # TODO; hardcode for now

@@ -299,10 +299,12 @@ class GridPage:
 
     def get_table_rows(self):
         rows = ''
+        # First spawn a thread to create EACH row's detail
         for level in location.gLevelList:
             for room in level.get_used_rooms():
                 for section in room.get_sections():
                     self.prime_detail_for_section(section)
+        # Secondly concatinate all the rows
         for level in location.gLevelList:
             rooms = level.get_used_rooms()
             for room_index in range(len(rooms)):

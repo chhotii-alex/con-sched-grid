@@ -146,7 +146,7 @@ class TimeSlotBucketArray(bucket.BucketArray):
             if prev_bucket is not None and bucket.contains_same_contents(prev_bucket):
                 schedule[-1][0] += 1
             else:
-                schedule.append( [1, bucket.get_items()] )
+                schedule.append( [1, bucket] )
             prev_bucket = bucket
         return schedule
 

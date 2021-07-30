@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from functools import total_ordering
 import autosort
 
@@ -175,3 +177,58 @@ def get_used_sections():
     for level in gLevelList:
         results += level.get_used_sections()
     return results
+
+def run_unit_tests():
+    lev3 = Level("Level C", "foo")
+    lev1 = Level("Level A", "bar")
+    lev4 = Level("Level D", "baz")
+    lev2 = Level("Level B", "bax")
+    '''  The sorting rule for a Level is inherited from Location 
+    unchanged: to wit, Levels are sorted alphabetically by full name.
+    '''
+    for i in range(1, len(gLevelList)):
+        if gLevelList[i].name <= gLevelList[i-1].name:
+            print(gLevelList[i-1], gLevelList[i].name)
+            raise Exception("Whoa, sorting test for Level failed!")
+    ernie = Room('Ernie')
+    bert = Room('Bert')
+    couple = ComboRoom("Ernie+Bert", ernie, bert)
+    grover = Room('Grover')
+    elmo = Room("Elmo")
+    cookie = Room('Cookie Monster')
+    monsters = ComboRoom("Monsters", grover, elmo, cookie)
+    ''' N.B., we MUST create ComboRooms before the rooms are added to 
+    the Level; otherwise the sorting won't work. TODO: enforce that '''
+    lev1.add_room(ernie)
+    lev1.add_room(bert)
+    lev1.add_room(grover)
+    lev1.add_room(elmo)
+    lev1.add_room(cookie)
+    lev1.add_room(Room('Snuffleupagus', 'Fast Track'))
+    lev1.add_room(Room('Big Bird', 'Fast Track'))
+    lev1.add_room(Room('Kermit', 'Artist Alley'))
+    lev1.add_room(Room('Zoe'))
+    ''' Test sorting for Rooms within a level. 
+       A few factors override name in the sorting of rooms.
+       1. Rooms that participate in Combos appear after rooms that don't.
+       2. Rooms in the same ComboRoom must sort together.
+       3. Rooms are sorted by (optional) usage first, then by name. 
+    '''
+    for i in range(1, len(lev1.rooms)):
+        room = lev1.rooms[i]
+        prev_room = lev1.rooms[i-1]
+        if len(room.combos) < len(prev_room.combos):
+            raise Exception("Room with combo first???")
+        if room.combos and prev_room.combos:
+            if room.combos[0].name < prev_room.combos[0].name:
+                raise Exception("Sorting of the combos???")
+        if len(room.combos) == len(prev_room.combos):
+            if not room.combos or room.combos[0] == prev_room.combos[0]:
+                if room.usage < prev_room.usage:
+                    raise Exception("Incorrect sorting by usage???")
+                elif room.usage == prev_room.usage:
+                    if room.name < prev_room.name:
+                        raise Exception("Incorrect sorting by name???")
+
+if __name__ == "__main__":
+    run_unit_tests()

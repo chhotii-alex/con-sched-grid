@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 import math
 import re
@@ -162,3 +163,23 @@ class PageBucketArray(bucket.BucketArray):
     def index_range_for_item(self, session):
         return (self.start_index_for_item(session),
                 self.end_index_for_item(session) )
+
+def run_unit_tests():
+    assert ampm_str_to_minute("6:00 AM") == 360
+    assert ampm_str_to_minute("6:40 AM") == 400
+    assert ampm_str_to_minute("12:00 AM") == 0
+    assert ampm_str_to_minute("12:01 AM") == 1
+    assert ampm_str_to_minute("12:00 PM") == 12*60
+    assert ampm_str_to_minute("9:00 PM") == 21*60
+    assert ampm_str_to_minute("11:59 PM") == (24*60-1)
+    assert miltime_str_to_minute("00:00") == 0
+    assert miltime_str_to_minute("00:01") == 1
+    assert miltime_str_to_minute("00:41") == 41
+    assert miltime_str_to_minute("12:00") == 12*60
+    assert miltime_str_to_minute("21:00") == 21*60
+    assert duration_str_to_minutes("15min") == 15
+    assert duration_str_to_minutes("3hr") == 3*60
+    assert duration_str_to_minutes("1hr 15min") == 75
+
+if __name__ == "__main__":
+    run_unit_tests()

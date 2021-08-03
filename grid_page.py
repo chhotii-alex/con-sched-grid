@@ -1,4 +1,5 @@
 import os
+import math
 from string import Template
 import autosort
 import location
@@ -10,19 +11,17 @@ body {
   font-family: Arial, sans-serif;
 }
 .page-third {
-  width: 33%;
+  width: ${third}px;
   display: inline-block;
 }
 table {
  table-layout: fixed;
  border: 1px solid black;
+ border-collapse: collapse;
 }
 td {
 border: 1px solid black;
 overflow: hidden;
-}
-table {
-border-collapse: collapse;
 }
 .level-name {
  transform: rotate(-90deg);
@@ -82,7 +81,7 @@ $title
 </title>
 </head>
 <body>
-<div width="100%">
+<div class="table-width" >
    <span class="page-third event-name" >
         $event
    </span>
@@ -216,9 +215,12 @@ class GridPage:
         r = RowDetailMaker(bucket_list, interval_max)
         return r.get_cells_for_section()
 
+    def get_table_width(self):
+        return 200 + self.time_range.interval_count()*self.cell_width
+
     def get_table_header(self):
         rows = '''
-        <table>
+        <table class="table-width">
         '''
         rows += '''<tr>
         <td colspan="2" width="200px" class="no-border"></td>
@@ -312,11 +314,16 @@ class GridPage:
         for i in range(12):
             sizes_dict['w_unit%d' % i] = '%dpx' % (i*self.cell_width)
             sizes_dict['h_unit%d' % i] = '%dpx' % (i*self.cell_height)
+        sizes_dict['third'] = math.floor(self.get_table_width()/3) - 3
         css = css.substitute(sizes_dict)
+        css += '.table-width {width: %dpx; max-width: %dpx; min-width: %dpx; display:block;} ' % (
+            self.get_table_width(),
+            self.get_table_width(),
+            self.get_table_width())
         for i in range(1, 10):
             css += '.limit-%drow {overflow:hidden;max-height:%dpx; height: %dpx;} ' % (
                 i, self.cell_height*i, self.cell_height*i)
-        for i in range(1, 30):
+        for i in range(1, 33):
             css += '.limit-%dcol {overflow: hidden;max-width: %dpx;width: %dpx;} ' % (
                 i, self.cell_width*i, self.cell_width*i)
         contents = Template(main_template)

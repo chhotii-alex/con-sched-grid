@@ -96,6 +96,7 @@ $title
 $theader
 $detail
 $tfoot
+$bottom
 </body>
 </html>
 '''
@@ -182,13 +183,13 @@ class RowDetailMaker:
         return results
 
 class GridPage:
-    def __init__(self, day_name, time_range, sessions):
-        self.connection_dictionary = None
+    def __init__(self, day_name, time_range, sessions, page_number):
         self.cell_height = 21
         self.cell_width = 26
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}
+        self.page_number = page_number
         for section in location.get_used_sections():
             self.sessions_per_section[section] = TimeSlotBucketArray(
                 time_range)
@@ -297,6 +298,13 @@ class GridPage:
         </table>
         '''
 
+    def get_page_bottom(self):
+        if False: 
+            # I don't know why I had "page numbers" in my to-do list, this
+            # is of questionable usefulness
+            return '<div align="center">Page %d</div>' % (self.page_number)
+        return ''
+
     def write(self):
         fh = open(self.get_file_name(), 'wt')
         css = Template(css_template)
@@ -318,6 +326,7 @@ class GridPage:
                                        theader=self.get_table_header(),
                                        detail=self.get_table_rows(),
                                        tfoot=self.get_table_foot(),
+                                       bottom=self.get_page_bottom(),
                                        css=css,
                                        zambia_ver="preliminary", # TODO
                                        event="Arisia 2020" # TODO; hardcode for now

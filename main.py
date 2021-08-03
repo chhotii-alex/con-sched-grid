@@ -15,8 +15,8 @@ class PageBuilder:
         self.sessions = bucket.items
         self.page = None
 
-    def make_page(self):
-        self.page = GridPage(self.day, self.time_range, self.sessions)
+    def make_page(self, page_number):
+        self.page = GridPage(self.day, self.time_range, self.sessions, page_number)
         self.page.write()
         self.page.open()
 
@@ -39,11 +39,12 @@ class GridMaker:
     def make_grids(self):
         self.prep_data()
 
-        threads = []
+        page_number = 1
         for bucket in self.contents.get_buckets():
             if not bucket.is_empty():
                 builder = PageBuilder(bucket)
-                builder.make_page()
+                builder.make_page(page_number)
+                page_number += 1
 
         print("Done!")
 

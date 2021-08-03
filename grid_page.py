@@ -269,7 +269,7 @@ class GridPage:
     def get_row_start(self, level, room, section, is_1st_room, 
                       is_1st_section):
         results = '<tr>'
-        if is_1st_room:
+        if is_1st_room and is_1st_section:
             results += '<td rowspan="%d" class="limit-%drow">' % (
                 len(level.get_used_sections()), 
                 len(level.get_used_rooms()))

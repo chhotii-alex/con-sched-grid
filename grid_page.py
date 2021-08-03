@@ -1,5 +1,4 @@
 import os
-import threading, queue
 from string import Template
 import autosort
 import location
@@ -152,25 +151,23 @@ class TimeSlotBucketArray(bucket.BucketArray):
             prev_bucket = bucket
         return schedule
 
-class RowDetailThread(threading.Thread):
-    def __init__(self, q, bucket_list, interval_max):
-        super().__init__()
-        self.q = q
+class RowDetailMaker:
+    def __init__(self, bucket_list, interval_max):
         self.bucket_list = bucket_list
         self.interval_max = interval_max
         
-    def get_cells_for_section(self, bucket_list, interval_max):
+    def get_cells_for_section(self):
         results = ''
         curr_interval = 0
-        for interval, sessions in bucket_list.get_schedule():
+        for interval, sessions in self.bucket_list.get_schedule():
             if sessions and sessions[0].is_placeholder():
                 continue
             if sessions:
                 class_name = 'schedule_item'
             else:
                 class_name = 'gray'
-            if curr_interval + interval >= interval_max:
-                interval = interval_max - curr_interval
+            if curr_interval + interval >= self.interval_max:
+                interval = self.interval_max - curr_interval
             room_count = 1
             if sessions:
                 room_count = sessions[0].get_room_count()
@@ -183,12 +180,6 @@ class RowDetailThread(threading.Thread):
             '''
             curr_interval += interval
         return results
-
-    def run(self):
-        results = self.get_cells_for_section(self.bucket_list, 
-                                              self.interval_max)
-        self.q.put(results)
-        return
 
 class GridPage:
     def __init__(self, day_name, time_range, sessions):
@@ -218,24 +209,11 @@ class GridPage:
     def get_title(self):
         return "Grid for %s %s" % (self.day_name, self.time_range.name)
 
-    def prime_detail_for_section(self, section):
-        if self.connection_dictionary is None:
-            self.connection_dictionary = {}
-        if section in self.connection_dictionary:
-            return
+    def get_detail_for_section(self, section):
         bucket_list = self.sessions_per_section[section]
         interval_max = self.time_range.interval_count()
-        q = queue.Queue() 
-        thread = RowDetailThread(q, bucket_list, interval_max)
-        thread.start()
-        self.connection_dictionary[section] = q
-
-    def get_detail_for_section(self, section):
-        q = self.connection_dictionary[section]
-        results = q.get()
-        q.task_done()
-        self.connection_dictionary.pop(section, None)
-        return results
+        r = RowDetailMaker(bucket_list, interval_max)
+        return r.get_cells_for_section()
 
     def get_table_header(self):
         rows = '''
@@ -299,12 +277,6 @@ class GridPage:
 
     def get_table_rows(self):
         rows = ''
-        # First spawn a thread to create EACH row's detail
-        for level in location.gLevelList:
-            for room in level.get_used_rooms():
-                for section in room.get_sections():
-                    self.prime_detail_for_section(section)
-        # Secondly concatinate all the rows
         for level in location.gLevelList:
             rooms = level.get_used_rooms()
             for room_index in range(len(rooms)):

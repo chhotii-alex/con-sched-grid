@@ -24,9 +24,16 @@ border: 1px solid black;
 overflow: hidden;
 }
 .level-name {
+ text-align: center;
+ white-space: nowrap;
+ vertical-align: middle;
+ width: ${w_unit4};
+}
+.level-name div {
  transform: rotate(-90deg);
  font-size: 10px;
- text-align: center;
+ margin-left: -6em;
+ margin-right: -6em;
 }
 .room-name {
  border: 1px solid black;
@@ -216,14 +223,15 @@ class GridPage:
         return r.get_cells_for_section()
 
     def get_table_width(self):
-        return 200 + self.time_range.interval_count()*self.cell_width
+        return (6+self.time_range.interval_count())*self.cell_width
 
     def get_table_header(self):
         rows = '''
         <table class="table-width">
         '''
         rows += '''<tr>
-        <td colspan="2" width="200px" class="no-border"></td>
+        <td colspan="1" class="no-border limit-1col"></td>
+        <td colspan="1" class="no-border limit-5col"></td>
         '''
         for _ in range(self.time_range.interval_count()):
             rows += '''<td colspan="1" class="limit-1col just-black"> </td>
@@ -231,7 +239,8 @@ class GridPage:
         rows += '</tr>'
         rows += '''
         <tr>
-        <td colspan="2" width="200px" class="no-border" ></td>
+        <td colspan="1" class="no-border limit-1col"></td>
+        <td colspan="1" class="no-border limit-5col"></td>
         '''
         for time_str in self.time_range.time_strings():
             rows += '<td class="time-head limit-%dcol" colspan="%d">' % (
@@ -251,10 +260,9 @@ class GridPage:
                       is_1st_section):
         results = '<tr>'
         if is_1st_room and is_1st_section:
-            results += '<td rowspan="%d" class="limit-%drow">' % (
-                len(level.get_used_sections()), 
-                len(level.get_used_rooms()))
-            results += '<div class="level-name" width="20px">'
+            results += '<td rowspan="%d" class="level-name">' % (
+                len(level.get_used_sections()) )
+            results += '<div>'
             results += level.name
             results += " (%s)" % level.get_short_name()
             results += '</div>'
@@ -265,7 +273,7 @@ class GridPage:
                 class_string = 'first_room'
             else:
                 class_string = ''
-            results += '<td class="room-name %s" rowspan="%d">' % (
+            results += '<td class="room-name %s limit-5col" rowspan="%d">' % (
                 class_string, len(room.get_sections()))
             results += '<div limit_%drow">' % (
                 len(room.get_sections()))

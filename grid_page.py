@@ -215,13 +215,14 @@ class RowDetailMaker:
         return results
 
 class GridPage:
-    def __init__(self, day_name, time_range, sessions, page_number):
+    def __init__(self, day_name, time_range, sessions, page_number, version):
         self.cell_height = 21
         self.cell_width = 26
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}
         self.page_number = page_number
+        self.version = version
         for section in location.get_used_sections():
             self.sessions_per_section[section] = TimeSlotBucketArray(
                 time_range)
@@ -369,7 +370,7 @@ class GridPage:
                                        tfoot=self.get_table_foot(),
                                        bottom=self.get_page_bottom(),
                                        css=css,
-                                       zambia_ver="preliminary", # TODO
+                                       zambia_ver=self.version, 
                                        event="Arisia 2020" # TODO; hardcode for now
                                        )
         fh.write(contents)

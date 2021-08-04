@@ -24,6 +24,7 @@ border: 1px solid black;
 overflow: hidden;
 }
 .level-name {
+ border: 0.5px solid Gray;
  text-align: center;
  white-space: nowrap;
  vertical-align: middle;
@@ -36,7 +37,7 @@ overflow: hidden;
  margin-right: -6em;
 }
 .room-name {
- border: 1px solid black;
+ border: 0.5px solid Gray;
  text-align: right;
  font-size: 11px;
  width: ${w_unit4};

@@ -124,6 +124,26 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
+class SessionOverlapperWrapper:
+    def __init__(self, session):
+        self.session = session
+
+    def is_placeholder(self):
+        return False
+
+    def get_title(self):
+        return "<i>%s</i> %s" % (self.session.get_time_str(), 
+                                 self.session.get_title() )
+
+    def get_time_minute_of_day(self):
+        return self.session.get_time_minute_of_day()
+
+    def get_duration(self):
+        return self.session.get_duration()
+        
+    def get_room_count(self):
+        return self.session.get_room_count()
+
 class TimeSlotBucketArray(bucket.BucketArray):
     def __init__(self, time_range):
         self.time_range = time_range
@@ -132,6 +152,9 @@ class TimeSlotBucketArray(bucket.BucketArray):
     def make_buckets(self):
         for _ in range(self.time_range.interval_count()):
             yield bucket.Bucket(autosort.AutoSortedArray())
+
+    def overlapper_wrapper_for_item(self, item):
+        return SessionOverlapperWrapper(item)
 
     def index_range_for_item(self, session):
         start_bucket_number = self.time_range.index_for_time(
@@ -148,12 +171,6 @@ class TimeSlotBucketArray(bucket.BucketArray):
         while start_bucket_number >= self.time_range.interval_count():
             start_bucket_number -= self.time_range.intervals_per_day()
             end_bucket_number -= self.time_range.intervals_per_day()
-        # Session may have started before start of time range.
-        if start_bucket_number < 0:
-            start_bucket_number = 0
-        # Session may go beyond this page's time
-        if end_bucket_number >= self.time_range.interval_count():
-            end_bucket_number = self.time_range.interval_count() - 1
         return (start_bucket_number, end_bucket_number)
 
     def get_schedule(self):

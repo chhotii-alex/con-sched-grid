@@ -51,13 +51,19 @@ class BucketArray:
     def index_range_for_item(self, item):
         raise Exception("Abstract; must override index_range_for_item")
 
+    def overlapper_wrapper_for_item(self, item):
+        return item
+
     def add_item(self, session):
         ''' Sorts one item into the approprate bucket(s). '''
         first_bucket_number, last_bucket_number  = \
             self.index_range_for_item(session)
+        if first_bucket_number < 0:
+            session = self.overlapper_wrapper_for_item(session)
         for bucket_number in range(first_bucket_number,
                                  last_bucket_number+1):
-            self.buckets[bucket_number].add_item(session)
+            if bucket_number >= 0 and bucket_number < len(self.buckets):
+                self.buckets[bucket_number].add_item(session)
 
     def get_buckets(self):
         return self.buckets

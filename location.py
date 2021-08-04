@@ -62,6 +62,7 @@ class Section(Location):
 class Room(Location):
     def __init__(self, name, usage="", short_name=None):
         super().__init__(name, short_name)
+        self.level = None
         self.usage = usage
         self.is_used = False
         self.suppress_flag = False
@@ -151,6 +152,8 @@ class ComboRoom(Location):
         self.rooms.extend(args)
         self.rooms.sort()
         for r in self.rooms:
+            if r.get_level():
+                raise Exception("You must create ComboRooms BEFORE rooms are added to a Level.")
             r.add_combo_membership(self)
 
     def __repr__(self):
@@ -198,7 +201,7 @@ def run_unit_tests():
     cookie = Room('Cookie Monster')
     monsters = ComboRoom("Monsters", grover, elmo, cookie)
     ''' N.B., we MUST create ComboRooms before the rooms are added to 
-    the Level; otherwise the sorting won't work. TODO: enforce that '''
+    the Level; otherwise the sorting won't work. '''
     lev1.add_room(ernie)
     lev1.add_room(bert)
     lev1.add_room(grover)

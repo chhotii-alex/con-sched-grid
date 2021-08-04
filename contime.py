@@ -79,24 +79,27 @@ class PageTimeRange:
         self.name = name
         self.start = int(start)
         self.end = int(end)
+        if self.end < self.start:
+            self.end += 24*60
         self.minutes_per_box = 15
         self.minutes_per_label = 30
 
     def time_string_for_min(self, min):
-            if min == 0:
-                return 'midnight'
-            if min == 12*60:
-                return 'noon'
-            ampm = 'a'
-            hour = math.floor(min/60)
-            if hour >= 12:
-                ampm = 'p'
-            if hour == 0:
-                hour = 12
-            if hour > 12:
-                hour -= 12
-            minute = min % 60
-            return "%d:%02d%s" % (hour, minute, ampm)
+        min = min % (24*60)
+        if min == 0:
+            return 'midnight'
+        if min == 12*60:
+            return 'noon'
+        ampm = 'a'
+        hour = math.floor(min/60)
+        if hour >= 12:
+            ampm = 'p'
+        if hour == 0:
+            hour = 12
+        if hour > 12:
+            hour -= 12
+        minute = min % 60
+        return "%d:%02d%s" % (hour, minute, ampm)
 
     def time_strings(self):
         results = []
@@ -119,19 +122,11 @@ class PageTimeRange:
     def intervals_per_day(self):
         return int(24*60/self.minutes_per_box)
 
-time_range_names = ["Wee Hours",
-                    "Morning/Afternoon",
-                    "Evening"]
-time_ranges_per_day = len(time_range_names)
-
-minutes_per_time_range = 24*60/len(time_range_names)
-
-''' Create page time ranges (what conguide calls a "slice").
-Each is 8 hours, starting at midnight, 8 am, and 4 pm. '''
-time_ranges = [PageTimeRange(time_range_names[i], 
-                             minutes_per_time_range*i, 
-                             minutes_per_time_range*(i+1)) 
-          for i in range(time_ranges_per_day)]
+''' Create page time ranges (what conguide calls a "slice").'''
+# TODO: time delimiters as text i.e. "8:30" so we can read from .cfg
+time_ranges = [PageTimeRange("Wee Hours", 90, 8*60+30),
+               PageTimeRange("Morning/Afternoon", 8*60+30, 17*60+30),
+               PageTimeRange("Evening", 17*60+30, 90) ]
 
 class PageBucket(bucket.Bucket):
     def __init__(self, day, time_range):
@@ -147,17 +142,25 @@ class PageBucketArray(bucket.BucketArray):
 
     def start_index_for_item(self, session):
         start_day_number = day_number[session.get_day()]
-        result = len(time_range_names)*start_day_number 
-        result += math.floor(
-            session.get_time_minute_of_day()/minutes_per_time_range)
+        result = len(time_ranges)*start_day_number 
+        result -= 1;
+        for time_range in time_ranges:
+            if session.get_time_minute_of_day() >= time_range.start:
+                result += 1
         return result
         
     def end_index_for_item(self, session):
         end_minutes = session.get_time_minute_of_day() + \
             session.get_duration() - 1
         start_day_number = day_number[session.get_day()]
-        result = len(time_range_names)*start_day_number 
-        result += math.floor(end_minutes/minutes_per_time_range)
+        result = len(time_ranges)*start_day_number 
+        result -= 1
+        if end_minutes > (24*60):
+            end_minutes = end_minutes % (24*60)
+            result += len(time_ranges)
+        for time_range in time_ranges:
+            if end_minutes >= time_range.start:
+                result += 1
         return result        
 
     def index_range_for_item(self, session):

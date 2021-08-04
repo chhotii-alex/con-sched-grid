@@ -115,6 +115,9 @@ class Placeholder:
     def is_placeholder(self):
         return True
 
+    def get_title(self):
+        return self.session.get_title()
+
     def get_time_minute_of_day(self):
         return self.session.get_time_minute_of_day()
 
@@ -135,6 +138,11 @@ class TimeSlotBucketArray(bucket.BucketArray):
             session.get_time_minute_of_day())
         end_bucket_number = self.time_range.index_for_time(
             session.get_time_minute_of_day() + session.get_duration() - 1)
+        # (rather hack-y) handle case where time range spans midnight, 
+        # and event is entirely after midnight:
+        if end_bucket_number < 0:
+            start_bucket_number += self.time_range.intervals_per_day()
+            end_bucket_number += self.time_range.intervals_per_day()
         # Session may have started before start of time range... on 
         # previous day!
         while start_bucket_number >= self.time_range.interval_count():

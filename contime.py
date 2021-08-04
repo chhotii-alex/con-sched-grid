@@ -123,7 +123,6 @@ class PageTimeRange:
         return int(24*60/self.minutes_per_box)
 
 ''' Create page time ranges (what conguide calls a "slice").'''
-# TODO: time delimiters as text i.e. "8:30" so we can read from .cfg
 time_ranges = [PageTimeRange("Wee Hours", "1:30", "8:30"),
                PageTimeRange("Morning/Afternoon", "8:30", "17:30"),
                PageTimeRange("Evening", "17:30", "1:30") ]

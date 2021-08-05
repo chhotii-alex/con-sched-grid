@@ -123,9 +123,13 @@ class Room(Location):
             return self.usage < other.usage
         return self.name < other.name
 
-
+@total_ordering
 class Level(Location):
-    def __init__(self, name, short_name=None):
+    def __init__(self, name, floor, wing, short_name=None):
+        self.floor = floor
+        self.wing = wing
+        if short_name is None:
+            short_name = "%d%s" % (floor, wing)
         super().__init__(name, short_name)
         global gLevelList
         gLevelList.append(self)
@@ -144,6 +148,25 @@ class Level(Location):
         for r in self.get_used_rooms():
             results += r.get_used_sections()
         return results
+
+    def __eq__(self, other):
+        if self.floor != other.floor:
+            return False
+        if self.wing != other.wing:
+            return False
+        if self.name != other.name:
+            return False
+        return True
+
+    def __lt__(self, other):
+        if self.wing > other.wing:
+            return True
+        if self.wing == other.wing:
+            if self.floor > other.floor:
+                return True
+            if self.floor == other.floor:
+                return self.name < other.name
+        return False
         
 class ComboRoom(Location):
     def __init__(self, name, *args):

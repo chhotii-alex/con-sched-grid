@@ -1,35 +1,14 @@
 from location import *
 from functools import total_ordering
 
-@total_ordering
-class WestinLevel(Level):
-    def __init__(self, name, floor, wing):
-        self.floor = floor
-        self.wing = wing
-        super().__init__(name, "%d%s" % (floor, wing))
-
-    def __eq__(self, other):
-        if self.floor != other.floor:
-            return False
-        if self.wing != other.wing:
-            return False
-        return True
-
-    def __lt__(self, other):
-        if self.wing > other.wing:
-            return True
-        if self.wing == other.wing:
-            if self.floor > other.floor:
-                return True
-        return False
 
 # For now we are hard-coding the levels/rooms/etc.
 # TO-DO: Definitely read in from config file before production!!!
-w1 = WestinLevel("Concourse Level", 1, "W")
-conf = WestinLevel("Conference Level", 3, "E")
-e2 = WestinLevel("Lobby East", 2, "E")
-w3 = WestinLevel("Mezzanine", 3, "W")
-w2 = WestinLevel("Lobby West", 2, "W")
+w1 = Level("Concourse Level", 1, "W")
+conf = Level("Conference Level", 3, "E")
+e2 = Level("Lobby East", 2, "E")
+w3 = Level("Mezzanine", 3, "W")
+w2 = Level("Lobby West", 2, "W")
 
 w3.add_room(Room('Alcott'))
 w3.add_room(Room('Adams'))

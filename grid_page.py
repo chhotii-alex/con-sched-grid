@@ -1,6 +1,7 @@
 import os
 import math
 from string import Template
+from functools import total_ordering
 import autosort
 import location
 import bucket
@@ -124,6 +125,7 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
+@total_ordering
 class SessionOverlapperWrapper:
     def __init__(self, session):
         self.session = session
@@ -143,6 +145,18 @@ class SessionOverlapperWrapper:
         
     def get_room_count(self):
         return self.session.get_room_count()
+
+    def __eq__(self, other):
+        if isinstance(other, SessionOverlapperWrapper):
+            return self.session == other.session
+        else:
+            return False
+
+    def __lt__(self, other):
+        if isinstance(other, SessionOverlapperWrapper):
+            return self.session < other.session
+        else:
+            return False
 
 class TimeSlotBucketArray(bucket.BucketArray):
     def __init__(self, time_range):

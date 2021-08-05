@@ -2,6 +2,7 @@ from functools import total_ordering
 from contime import *
 from location import *
 
+@total_ordering
 class Session:
     def __init__(self, data):
         self.day = data['day']
@@ -73,7 +74,10 @@ class Session:
         if isinstance(other, Session):
             result = self.__key() == other.__key()
             return result
-        return NotImplemented
+        return False
 
     def __lt__(self, other): 
-        return self.__key() < other.__key()
+        if isinstance(other, Session):
+            return self.__key() < other.__key()
+        else:
+            return True

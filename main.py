@@ -3,7 +3,7 @@
 import math
 import sys
 from location import *
-import hardcoded_room_config
+import config
 from contime import *
 from grid_page import *
 import db_fetch

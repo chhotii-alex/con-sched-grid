@@ -8,6 +8,8 @@ cfg = configparser.ConfigParser(allow_no_value=True, strict=False,
 
 cfg.read("example-data/conguide.cfg")
 
+event_name = cfg.get('convention', 'convention')
+
 for section in cfg.sections():
     m = re.match(r'room (.*)', section)
     if m:
@@ -40,7 +42,6 @@ for section in cfg.sections():
     if m:
         name = m.group(2)
         pubsname = cfg.get(section, 'pubsname')
-        print("Level pubsname:", name, pubsname)
         floor = int(pubsname[0])
         wing = pubsname[1]
         level = location.Level(name, floor, wing)

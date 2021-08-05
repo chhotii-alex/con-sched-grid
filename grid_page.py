@@ -6,6 +6,7 @@ import autosort
 import location
 import bucket
 import contime
+import config
 
 css_template = '''
 body {
@@ -385,7 +386,7 @@ class GridPage:
                                        bottom=self.get_page_bottom(),
                                        css=css,
                                        zambia_ver=self.version, 
-                                       event="Arisia 2020" # TODO; hardcode for now
+                                       event=config.event_name
                                        )
         fh.write(contents)
         fh.close()

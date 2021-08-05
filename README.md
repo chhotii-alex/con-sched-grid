@@ -46,5 +46,5 @@ are sometimes not in synchrony. In the grid, therefore, two rows together, each 
 
 The complexities of the Location relationships are not encoded in the database. What can be gleaned from the database is a plain list of names of locations at the
 Room or Section level, but no clue as to grouping into Levels, nor the information regarding what rooms are actually Sections and what rooms they each belong to,
-nor what rooms are actually ComboRooms and what rooms they combine. This information must be read in from a configuration file (not yet implemented; in the
-current version this is hard-coded as needed to make sense of the example data.)
+nor what rooms are actually ComboRooms and what rooms they combine. This information must be read in from a configuration file. I'm aiming for it to be the case
+that the same configuration file can be used for both this and for conguide (for the production of the Pocket Program). 

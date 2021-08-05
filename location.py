@@ -169,10 +169,10 @@ class Level(Location):
         return False
         
 class ComboRoom(Location):
-    def __init__(self, name, *args):
+    def __init__(self, name, rooms):
         super().__init__(name, None)
         self.rooms = []
-        self.rooms.extend(args)
+        self.rooms.extend(rooms)
         self.rooms.sort()
         for r in self.rooms:
             if r.get_level():

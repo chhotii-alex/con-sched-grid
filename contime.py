@@ -139,32 +139,27 @@ class PageBucketArray(bucket.BucketArray):
             for time_range in time_ranges:
                 yield PageBucket(day, time_range)
 
-    def start_index_for_item(self, session):
+    def index_range_for_item(self, session):
         start_day_number = day_number[session.get_day()]
-        result = len(time_ranges)*start_day_number 
-        result -= 1;
+        day_bin = len(time_ranges)*start_day_number 
+        day_bin -= 1;
+
+        start_bin = day_bin
         for time_range in time_ranges:
             if session.get_time_minute_of_day() >= time_range.start:
-                result += 1
-        return result
-        
-    def end_index_for_item(self, session):
+                start_bin += 1
+
+        end_bin = day_bin
         end_minutes = session.get_time_minute_of_day() + \
             session.get_duration() - 1
-        start_day_number = day_number[session.get_day()]
-        result = len(time_ranges)*start_day_number 
-        result -= 1
-        if end_minutes > (24*60):
-            end_minutes = end_minutes % (24*60)
-            result += len(time_ranges)
+        while end_minutes > (24*60):
+            end_minutes -= (24*60)
+            end_bin += len(time_ranges)
         for time_range in time_ranges:
             if end_minutes >= time_range.start:
-                result += 1
-        return result        
+                end_bin += 1
 
-    def index_range_for_item(self, session):
-        return (self.start_index_for_item(session),
-                self.end_index_for_item(session) )
+        return (start_bin, end_bin)
 
 def run_unit_tests():
     assert ampm_str_to_minute("6:00 AM") == 360

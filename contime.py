@@ -84,6 +84,10 @@ class PageTimeRange:
         self.minutes_per_box = 15
         self.minutes_per_label = 30
 
+    def __repr__(self):
+        return "%s to %s" % (self.time_string_for_min(self.start),
+                             self.time_string_for_min(self.end) )
+
     def time_string_for_min(self, min):
         min = min % (24*60)
         if min == 0:

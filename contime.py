@@ -24,6 +24,9 @@ for i in range(len(days)):
     day = days[i]
     day_number[day[0:3]] = i
 
+def day_number_for_day_name(day):
+    return day_number[day[0:3]]
+
 def ampm_str_to_minute(a_string):
     a_string = a_string.strip()
     m = re.match(r'(\d+):(\d+) +([AP]M)', a_string)
@@ -135,6 +138,7 @@ class PageBucket(bucket.Bucket):
     def __init__(self, day, time_range):
         super().__init__()
         self.day = day
+        self.day_number = day_number_for_day_name(self.day)
         self.time_range = time_range
 
 class PageBucketArray(bucket.BucketArray):

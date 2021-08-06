@@ -126,6 +126,9 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
+    def get_start_day_number(self):
+        return self.session.get_start_day_number()
+
     def __repr__(self):
         return "placeholder for %s" % (self.session)
 
@@ -163,8 +166,9 @@ class SessionOverlapperWrapper:
             return False
 
 class TimeSlotBucketArray(bucket.BucketArray):
-    def __init__(self, time_range):
+    def __init__(self, time_range, day_number):
         self.time_range = time_range
+        self.day_number = day_number
         super().__init__()
 
     def make_buckets(self):
@@ -177,26 +181,23 @@ class TimeSlotBucketArray(bucket.BucketArray):
     '''
        Return the start and end indexes of times slots occupied (within this page)
        by the given session.
+       If there's a mismatch between the session's given day and my day, this
+       is due to something spanning midnight (either a session or a time range),
+       and a correction for the day has to be applied.
        The starting index might be less than 0, or the end index might be past
        the end of the array-- that's expected, when the session overlaps an edge of
        this page's time slice. That's fine-- BucketArray.add_item() knows to trim 
        off the invalid indices from the ends.
-       We're not directly considering day here. So we may get session times that 
-       seem like they don't overlap this time range-- i.e. start time after our
-       end or end time before our start. This is due to spurious day offsets due
-       to things spanning midnight:
-       - a start minute after our range is due to a session spanning midnight,
-       and actually starting the day before this time range
-       - an end minute before our range is due to a time range spanning midnight,
-       and actually starting the day before this session
-       So corrections are applied in those cases.
     '''
     def index_range_for_item(self, session):
         start_minute = session.get_time_minute_of_day()
-        if start_minute >= self.time_range.end:
-            start_minute -= 24*60
         end_minute = start_minute + session.get_duration() - 1
-        if end_minute < self.time_range.start:
+        if self.day_number > session.get_start_day_number():
+            '''Session actually started last night. Shift range into frame.'''
+            start_minute -= 24*60
+            end_minute -= 24*60
+        if self.day_number < session.get_start_day_number():
+            ''' I overlap into next day, and this session starts after midnight.'''
             start_minute += 24*60
             end_minute += 24*60
         start_bucket_number = self.time_range.index_for_time(start_minute)
@@ -256,7 +257,7 @@ class GridPage:
         self.version = version
         for section in location.get_used_sections():
             self.sessions_per_section[section] = TimeSlotBucketArray(
-                time_range)
+                time_range, contime.day_number_for_day_name(day_name))
         for session in sessions:
             first = True
             for section in session.get_sections():

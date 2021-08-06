@@ -52,3 +52,13 @@ for section in cfg.sections():
                 location.Room(rname)
             level.add_room(location.gLocationLookup[rname])
 
+session_initial_abbreviations = {}
+session_continue_abbreviations = {}
+
+for abbrev in cfg.items("session abbrev initial"):
+    session_initial_abbreviations[abbrev[0]] = abbrev[1]
+
+for abbrev in cfg.items("session abbrev continue"):
+    session_continue_abbreviations[abbrev[0]] = abbrev[1]
+
+

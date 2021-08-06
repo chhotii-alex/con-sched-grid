@@ -1,10 +1,12 @@
 from functools import total_ordering
 from contime import *
 from location import *
+import config
 
 @total_ordering
 class Session:
     def __init__(self, data):
+        self.id = data['sessionid']
         self.day = data['day']
         self.time = data['time']
         self.duration = duration_str_to_minutes(data['duration'])
@@ -22,6 +24,18 @@ class Session:
 
     def get_title(self):
         return self.title
+
+    def get_abbreviation(self):
+        if self.id in config.session_initial_abbreviations:
+            return config.session_initial_abbreviations[self.id]
+        else:
+            return self.get_title()
+
+    def get_continuation_abbrev(self):
+        if self.id in config.session_continue_abbreviations:
+            return config.session_continue_abbreviations[self.id]
+        else:
+            return self.get_title()
 
     def get_location(self):
         return self.location

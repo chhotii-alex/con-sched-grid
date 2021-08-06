@@ -120,6 +120,9 @@ class Placeholder:
     def get_title(self):
         return self.session.get_title()
 
+    def get_abbreviation(self):
+        return self.session.get_abbreviation()
+
     def get_time_minute_of_day(self):
         return self.session.get_time_minute_of_day()
 
@@ -140,9 +143,9 @@ class SessionOverlapperWrapper:
     def is_placeholder(self):
         return False
 
-    def get_title(self):
+    def get_abbreviation(self):
         return "<i>%s</i> %s" % (self.session.get_time_str(), 
-                                 self.session.get_title() )
+                                 self.session.get_continuation_abbrev() )
 
     def get_time_minute_of_day(self):
         return self.session.get_time_minute_of_day()
@@ -240,7 +243,7 @@ class RowDetailMaker:
                 class_name, interval, room_count)
             results += '<div class="limit-%dcol limit-%drow">' % (
                 interval, room_count)
-            results += '; '.join([s.get_title() for s in sessions])
+            results += '; '.join([s.get_abbreviation() for s in sessions])
             results += '''</div></td>
             '''
             curr_interval += interval

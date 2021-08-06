@@ -126,6 +126,9 @@ class Placeholder:
     def get_duration(self):
         return self.session.get_duration()
 
+    def __repr__(self):
+        return "placeholder for %s" % (self.session)
+
 @total_ordering
 class SessionOverlapperWrapper:
     def __init__(self, session):
@@ -171,21 +174,34 @@ class TimeSlotBucketArray(bucket.BucketArray):
     def overlapper_wrapper_for_item(self, item):
         return SessionOverlapperWrapper(item)
 
+    '''
+       Return the start and end indexes of times slots occupied (within this page)
+       by the given session.
+       The starting index might be less than 0, or the end index might be past
+       the end of the array-- that's expected, when the session overlaps an edge of
+       this page's time slice. That's fine-- BucketArray.add_item() knows to trim 
+       off the invalid indices from the ends.
+       We're not directly considering day here. So we may get session times that 
+       seem like they don't overlap this time range-- i.e. start time after our
+       end or end time before our start. This is due to spurious day offsets due
+       to things spanning midnight:
+       - a start minute after our range is due to a session spanning midnight,
+       and actually starting the day before this time range
+       - an end minute before our range is due to a time range spanning midnight,
+       and actually starting the day before this session
+       So corrections are applied in those cases.
+    '''
     def index_range_for_item(self, session):
-        start_bucket_number = self.time_range.index_for_time(
-            session.get_time_minute_of_day())
-        end_bucket_number = self.time_range.index_for_time(
-            session.get_time_minute_of_day() + session.get_duration() - 1)
-        # (rather hack-y) handle case where time range spans midnight, 
-        # and event is entirely after midnight:
-        if end_bucket_number < 0:
-            start_bucket_number += self.time_range.intervals_per_day()
-            end_bucket_number += self.time_range.intervals_per_day()
-        # Session may have started before start of time range... on 
-        # previous day!
-        while start_bucket_number >= self.time_range.interval_count():
-            start_bucket_number -= self.time_range.intervals_per_day()
-            end_bucket_number -= self.time_range.intervals_per_day()
+        start_minute = session.get_time_minute_of_day()
+        if start_minute >= self.time_range.end:
+            start_minute -= 24*60
+        end_minute = start_minute + session.get_duration() - 1
+        if end_minute < self.time_range.start:
+            start_minute += 24*60
+            end_minute += 24*60
+        start_bucket_number = self.time_range.index_for_time(start_minute)
+        end_bucket_number = self.time_range.index_for_time(end_minute)
+
         return (start_bucket_number, end_bucket_number)
 
     def get_schedule(self):

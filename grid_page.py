@@ -12,25 +12,33 @@ css_template = '''
 body {
   font-family: Arial, sans-serif;
 }
-.page-third {
-  width: ${third}px;
-  display: inline-block;
+.grid-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    "event slice zambia"
+    "table table table";
 }
 table {
  table-layout: fixed;
- border: 1px solid black;
+ border: 0.01in solid black;
  border-collapse: collapse;
 }
 td {
-border: 1px solid black;
+  border: 0.01in solid black; 
+  padding: 0.01in; 
 overflow: hidden;
 }
 .level-name {
- border: 0.5px solid Gray;
+ border-style: solid;
+ border-width: 0.01in;
+ border-color: black Gray black black;
+ z-index: -1;
  text-align: center;
  white-space: nowrap;
  vertical-align: middle;
- width: ${w_unit4};
+ width: ${w_unit2};
 }
 .level-name div {
  transform: rotate(-90deg);
@@ -39,12 +47,16 @@ overflow: hidden;
  margin-right: -6em;
 }
 .room-name {
- border: 0.5px solid Gray;
+ border-style: solid;
+ border-width: 0.01in;
+ border-color: Gray black Gray Gray;
+ z-index: -1;
  text-align: right;
  font-size: 11px;
  width: ${w_unit4};
 }
-.first-room {
+.first_room {
+ border-color: black black Gray Gray;
 }
 .just-black {
  background-color: black;
@@ -68,14 +80,21 @@ overflow: hidden;
   font-size: 10px;
 }
 .event-name {
+  grid-area: event;
 }
 .page-title {
-text-align: center;
-font-weight: bold;
+  text-align: center;
+  font-weight: bold;
+  grid-area: slice;
 }
 .version {
   text-align: right;
   font-size: 8px;
+  grid-area: zambia;
+}
+.table {
+  grid-area: table;
+  /* overflow: hidden; */
 }
 '''
 
@@ -91,20 +110,23 @@ $title
 </title>
 </head>
 <body>
-<div class="table-width" >
-   <span class="page-third event-name" >
+<div class="table-width grid-container" >
+   <span class="event-name" >
         $event
    </span>
-   <span class="page-third page-title">
+   <span class="page-title">
         $day $slice
    </span>
-   <span class="page-third version">
+   <span class="version">
         $zambia_ver
    </span>
+
+   <div class="table" >
+     $theader
+     $detail
+     $tfoot
+   </div>
 </div>
-$theader
-$detail
-$tfoot
 $bottom
 </body>
 </html>
@@ -252,7 +274,6 @@ class RowDetailMaker:
 class GridPage:
     def __init__(self, day_name, time_range, sessions, page_number, version):
         self.cell_height = 21
-        self.cell_width = 26
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}
@@ -284,16 +305,21 @@ class GridPage:
         r = RowDetailMaker(bucket_list, interval_max)
         return r.get_cells_for_section()
 
+    def get_cell_width(self):
+        return self.get_table_width()/(6+self.time_range.interval_count()) - 0.04
+
+    '''Now in inches'''
     def get_table_width(self):
-        return (6+self.time_range.interval_count())*self.cell_width
+        return 9.0
 
     def get_table_header(self):
         rows = '''
         <table class="table-width">
+          <thead>
         '''
         rows += '''<tr>
-        <td colspan="1" class="no-border limit-1col"></td>
-        <td colspan="1" class="no-border limit-5col"></td>
+        <td colspan="1" class="no-border limit-2col"></td>
+        <td colspan="1" class="no-border limit-4col"></td>
         '''
         for _ in range(self.time_range.interval_count()):
             rows += '''<td colspan="1" class="limit-1col just-black"> </td>
@@ -301,8 +327,8 @@ class GridPage:
         rows += '</tr>'
         rows += '''
         <tr>
-        <td colspan="1" class="no-border limit-1col"></td>
-        <td colspan="1" class="no-border limit-5col"></td>
+        <td colspan="1" class="no-border limit-2col"></td>
+        <td colspan="1" class="no-border limit-4col"></td>
         '''
         for time_str in self.time_range.time_strings():
             rows += '<td class="time-head limit-%dcol" colspan="%d">' % (
@@ -314,6 +340,7 @@ class GridPage:
                   '''
         rows += '''
         </tr>
+          </thead>
         <tbody>
         '''
         return rows
@@ -335,7 +362,7 @@ class GridPage:
                 class_string = 'first_room'
             else:
                 class_string = ''
-            results += '<td class="room-name %s limit-5col" rowspan="%d">' % (
+            results += '<td class="room-name %s limit-4col" rowspan="%d">' % (
                 class_string, len(room.get_sections()))
             results += '<div limit_%drow">' % (
                 len(room.get_sections()))
@@ -382,11 +409,10 @@ class GridPage:
         css = Template(css_template)
         sizes_dict = {}
         for i in range(12):
-            sizes_dict['w_unit%d' % i] = '%dpx' % (i*self.cell_width)
+            sizes_dict['w_unit%d' % i] = '%fin' % (i*self.get_cell_width())
             sizes_dict['h_unit%d' % i] = '%dpx' % (i*self.cell_height)
-        sizes_dict['third'] = math.floor(self.get_table_width()/3) - 3
         css = css.substitute(sizes_dict)
-        css += '.table-width {width: %dpx; max-width: %dpx; min-width: %dpx; display:block;} ' % (
+        css += '.table-width {width: %fin; max-width: %fin; min-width: %fin; } ' % (
             self.get_table_width(),
             self.get_table_width(),
             self.get_table_width())
@@ -394,8 +420,8 @@ class GridPage:
             css += '.limit-%drow {overflow:hidden;max-height:%dpx; height: %dpx;} ' % (
                 i, self.cell_height*i, self.cell_height*i)
         for i in range(1, 33):
-            css += '.limit-%dcol {overflow: hidden;max-width: %dpx;width: %dpx;} ' % (
-                i, self.cell_width*i, self.cell_width*i)
+            css += '.limit-%dcol {overflow: hidden;max-width: %fin;width: %fin;} ' % (
+                i, self.get_cell_width()*i, self.get_cell_width()*i)
         contents = Template(main_template)
         contents = contents.substitute(title=self.get_title(),
                                        day=self.day_name,

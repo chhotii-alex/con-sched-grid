@@ -145,6 +145,9 @@ class Placeholder:
     def get_abbreviation(self):
         return self.session.get_abbreviation()
 
+    def get_continuation_abbrev(self):
+        return self.session.get_continuation_abbrev()
+
     def get_time_minute_of_day(self):
         return self.session.get_time_minute_of_day()
 
@@ -153,6 +156,12 @@ class Placeholder:
 
     def get_start_day_number(self):
         return self.session.get_start_day_number()
+
+    def get_room_count(self):
+        return self.session.get_room_count()
+
+    def get_time_str(self):
+        return self.session.get_time_str()
 
     def __repr__(self):
         return "placeholder for %s" % (self.session)
@@ -273,7 +282,6 @@ class RowDetailMaker:
 
 class GridPage:
     def __init__(self, day_name, time_range, sessions, page_number, version):
-        self.cell_height = 21
         self.day_name = day_name
         self.time_range = time_range
         self.sessions_per_section = {}
@@ -308,9 +316,15 @@ class GridPage:
     def get_cell_width(self):
         return self.get_table_width()/(6+self.time_range.interval_count()) - 0.04
 
+    def get_cell_height(self):
+        return self.get_table_height()/(1+self.get_row_count())
+
     '''Now in inches'''
     def get_table_width(self):
-        return 9.0
+        return 10.0
+
+    def get_table_height(self):
+        return 7.0
 
     def get_table_header(self):
         rows = '''
@@ -353,7 +367,7 @@ class GridPage:
                 len(level.get_used_sections()) )
             results += '<div>'
             results += level.name
-            results += " (%s)" % level.get_short_name()
+            results += "<br/>(%s)" % level.get_short_name()
             results += '</div>'
             results += '''</td>
              '''
@@ -375,6 +389,8 @@ class GridPage:
         return '''</tr>
                '''
 
+    # TODO: use a generator function to yield sections,
+    # and refactor this function and the next to use it
     def get_table_rows(self):
         rows = ''
         for level in location.gLevelList:
@@ -390,6 +406,16 @@ class GridPage:
                     rows += self.get_detail_for_section(section)
                     rows += self.get_row_end()
         return rows
+
+    def get_row_count(self):
+        total = 0
+        for level in location.gLevelList:
+            rooms = level.get_used_rooms()
+            for room_index in range(len(rooms)):
+                room = rooms[room_index]
+                sections = room.get_sections()
+                total += len(sections)
+        return total
 
     def get_table_foot(self):
         return '''
@@ -410,15 +436,15 @@ class GridPage:
         sizes_dict = {}
         for i in range(12):
             sizes_dict['w_unit%d' % i] = '%fin' % (i*self.get_cell_width())
-            sizes_dict['h_unit%d' % i] = '%dpx' % (i*self.cell_height)
+            sizes_dict['h_unit%d' % i] = '%fin' % (i*self.get_cell_height())
         css = css.substitute(sizes_dict)
         css += '.table-width {width: %fin; max-width: %fin; min-width: %fin; } ' % (
             self.get_table_width(),
             self.get_table_width(),
             self.get_table_width())
         for i in range(1, 10):
-            css += '.limit-%drow {overflow:hidden;max-height:%dpx; height: %dpx;} ' % (
-                i, self.cell_height*i, self.cell_height*i)
+            css += '.limit-%drow {overflow:hidden;max-height:%fin; height: %fin;} ' % (
+                i, self.get_cell_height()*i, self.get_cell_height()*i)
         for i in range(1, 33):
             css += '.limit-%dcol {overflow: hidden;max-width: %fin;width: %fin;} ' % (
                 i, self.get_cell_width()*i, self.get_cell_width()*i)

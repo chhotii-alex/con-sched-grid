@@ -130,9 +130,9 @@ class PageTimeRange:
         return int(24*60/self.minutes_per_box)
 
 ''' Create page time ranges (what conguide calls a "slice").'''
-time_ranges = [PageTimeRange("Wee Hours", "1:30", "8:30"),
+time_ranges = [PageTimeRange("Wee Hours", "2:00", "8:30"),
                PageTimeRange("Morning/Afternoon", "8:30", "17:30"),
-               PageTimeRange("Evening", "17:30", "1:30") ]
+               PageTimeRange("Evening", "17:30", "2:00") ]
 
 class PageBucket(bucket.Bucket):
     def __init__(self, day, time_range):

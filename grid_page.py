@@ -172,7 +172,7 @@ class SessionOverlapperWrapper:
         self.session = session
 
     def is_placeholder(self):
-        return False
+        return self.session.is_placeholder()
 
     def get_abbreviation(self):
         return "<i>%s</i> %s" % (self.session.get_time_str(), 

@@ -69,12 +69,24 @@ for section in cfg.sections():
                 location.Room(rname)
             level.add_room(location.gLocationLookup[rname])
 
+''' I cannot figure out how Paul would've been telling conguide to not
+put certain rooms on the grid (other than the minimum number of sessions
+rule. So I'm having to add a new section type to suppress rooms from grid?'''
+for section in cfg.sections():
+    m = re.match(r'grid suppress', section)
+    if m:
+        try:
+            suppressed_rooms = cfg.get(section, 'rooms')
+            suppressed_rooms = re.split(r',\s*', suppressed_rooms)
+            for room in suppressed_rooms:
+                location.gLocationLookup[room].suppress()
+        except configparser.NoOptionError:
+            pass
+
 # Use aliases on the room definition, because
 # THIS DOES NOT WORK, because the case is smashed for the key:
 #for mapping in cfg.items("session change room"):
 #    location.gLocationLookup[mapping[0]] = location.gLocationLookup[mapping[1]]
-
-print(location.gLocationLookup)
 
 session_initial_abbreviations = {}
 session_continue_abbreviations = {}

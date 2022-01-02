@@ -73,6 +73,7 @@ class Room(Location):
 
     def set_level(self, level):
         self.level = level
+        return True
 
     def get_level(self):
         return self.level
@@ -136,8 +137,8 @@ class Level(Location):
         self.rooms = autosort.AutoSortedArray()
 
     def add_room(self, room):
-        self.rooms.append(room)
-        room.set_level(self)
+        if room.set_level(self):
+            self.rooms.append(room)
         return room
 
     def get_used_rooms(self):
@@ -191,6 +192,9 @@ class ComboRoom(Location):
 
     def get_sections(self):
         return self.get_rooms()
+
+    def set_level(self, level):
+        return False
 
 def get_used_rooms():
     results = []

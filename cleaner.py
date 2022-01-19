@@ -11,11 +11,14 @@ def replace_all(text, dic):
         text = text.replace(i, j)
     return text
 
-def test_string_impl(s, allowed_tags):
+'''
+Return values: transformed string; whether original string contained forbidden tag
+Throws exception if orginal string contains unmatched tags
+'''
+def clean_tags(s, allowed_tags):
     contains_forbidden_tag = False
     result = ""
     tag_stack = []
-    print(s)
     pieces = tagsplit.split(s)
     for i in range(len(pieces)):
         bit = pieces[i]
@@ -41,31 +44,59 @@ def test_string_impl(s, allowed_tags):
                         tag_stack.pop()
                 else:
                     tag_stack.append(tag)
-            print("tag: %s attrs: %s end? %s empty? %s" % (tag, attrs, is_close, is_empty))
         else:
             result += replace_all(bit, replacements)
     if len(tag_stack) > 0:
         raise Exception("Unclosed tag in:" + s)
     if contains_forbidden_tag:
-        print("This string contains a forbidden tag:", s)
-    print(result)
-    print()
+        print("Warning: contains a forbidden tag:", s)
+    return (result, contains_forbidden_tag)
 
-def test_string(s):
-    test_string_impl(s, ['i'])
+'''
+Unit test functions
+'''
+def test_string_is_unchanged(s):
+    (new_str, forbidden_tag) = clean_tags(s, ['i'])
+    if forbidden_tag:
+        raise Exception("Falsely claims bad tag")
+    if new_str != s:
+        raise Exception("Should not have changed string")
+
+def test_contains_and_doesnt(s, include, exclude):
+    (new_str, forbidden_tag) = clean_tags(s, ['i'])
+    if include not in new_str:
+        raise Exception("Transformed string missing something")
+    if exclude in new_str:
+        raise Exception("Something should have been removed")
+
+def test_throws_exception(s):
+    did_throw_exception = False
+    try:
+        clean_tags(s, ['i'])
+    except:
+        did_throw_exception = True
+    if not did_throw_exception:
+        raise Exception("Exception should've occurred")
+
+def test_result_is_empty(s):
+    (new_str, forbidden_tag) = clean_tags(s, ['i'])
+    new_str = new_str.strip()
+    if new_str:
+        raise Exception("Result should be empty")
 
 def run_unit_tests():
-    test_string('before<i>Lord of the Rings</i>after')
-    test_string('blah<meta charset="utf-8" />5 < 8')
-    test_string('before<meta name="viewport" content="width=device-width, initial-scale=1.0" />after')
-    test_string('before<link rel="canonical" href="https://docs.python.org/3/library/re.html" />after')
-    test_string('before<input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation" aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu" />after')
-    test_string('before<li><a class="reference internal" href="#regular-expression-examples">Regular Expression Examples</a></li>after')
-    test_string('before<b>bold stuff<i>inside nested tags</i></b>after')
-    test_string('before<li class="nav-item nav-item-1"><a href="index.html" >The Python Standard Library</a> &#187;</li>after')
-    test_string('before<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># No match; search doesn&#39;t include the &quot;d&quot;</span>after')
-    test_string('before<script type="text/javascript" src="../_static/switchers.js"></script>after')
-    test_string('''before
+    test_string_is_unchanged('before<i>Lord of the Rings</i>after')
+    test_contains_and_doesnt('blah<meta charset="utf-8" />5 < 8', '&lt;', 'meta')
+    test_contains_and_doesnt('before<meta name="viewport" content="width=device-width, initial-scale=1.0" />after', 'after', 'viewport')
+    test_contains_and_doesnt('before<link rel="canonical" href="https://docs.python.org/3/library/re.html" />after', 'after', 'https')
+    test_contains_and_doesnt('before<input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation" aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu" />after',
+                             'before after', 'input')
+    test_throws_exception('before<li><a class="reference internal" href="#regular-expression-examples">Regular Expression Examples</a><ul>after')
+    test_contains_and_doesnt('before<b>bold stuff<i>inside nested tags</i></b>after', 'before bold', '/b')
+    test_contains_and_doesnt('before<li class="nav-item nav-item-1"><a href="index.html" >The Python Standard Library</a> &#187;</li>after', 'before  The', 'li')
+    test_throws_exception('before<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1">after')
+    test_contains_and_doesnt('before<script type="text/javascript" src="../_static/switchers.js"></script>after', 'before  after', 'switchers')
+    test_contains_and_doesnt('''before
    <style>
       @media only screen {
         table.full-width-table {
@@ -73,14 +104,14 @@ def run_unit_tests():
         }
       }
     </style>
-       after''')
-    test_string('''before<script>
+       after''', 'before', 'style')
+    test_contains_and_doesnt('''before<script>
             if (6 < 11) {
                  Crasher.crashEntireSystem();
             }
           </script>
-       after''')
-    test_string("<br/>")
+       after''', '&lt;', 'script')
+    test_result_is_empty("<br/>")
 
 if __name__ == "__main__":
     run_unit_tests()

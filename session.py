@@ -2,6 +2,7 @@ from functools import total_ordering
 from contime import *
 from location import *
 import config
+import cleaner
 
 @total_ordering
 class Session:
@@ -12,6 +13,7 @@ class Session:
         self.duration = duration_str_to_minutes(data['duration'])
         self.location = gLocationLookup[data['room']]
         self.title = data['title']
+        (self.title, _) = cleaner.clean_tags(self.title, ['i'])
         # We have other info on each session, but it's ignored for the
         # purpose of a grid.
 

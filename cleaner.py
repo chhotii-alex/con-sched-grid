@@ -68,7 +68,7 @@ def cleanup_tag(tag, attrs, is_close, is_empty):
 Return values: transformed string; whether original string contained forbidden tag
 Throws exception if orginal string contains unmatched tags
 '''
-def clean_tags(s, allowed_tags):
+def clean_tags(s, allowed_tags, transform=None):
     contains_forbidden_tag = False
     result = ""
     tag_stack = []
@@ -92,7 +92,10 @@ def clean_tags(s, allowed_tags):
                 else:
                     tag_stack.append(tag)
         else:
-            result += replace_all(bit, replacements)
+            text = replace_all(bit, replacements)
+            if transform:
+                text = transform(text)
+            result += text
     if len(tag_stack) > 0:
         raise Exception("Unclosed tag in:" + s)
     if contains_forbidden_tag:
@@ -136,12 +139,21 @@ def test_anchor_cleaning(s):
     if 'target="_blank"' not in new_str:
         raise Exception("Failed to add target=_blank")
 
+def test_transform():
+    orig = "this text <i>should be italic</i>and capitalized"
+    (new_str, forbidden_tag) = clean_tags(orig, ['i', 'a'], lambda t: t.upper() )
+    if "capitalized" in new_str:
+        raise Exception("What, this should be upper")
+    if "CAPITALIZED" not in new_str:
+        raise Exception("Where is my upper text")
+
 def test_internal_anchor(s):
     (new_str, forbidden_tag) = clean_tags(s, ['i', 'a'])
     if 'target="_blank"' in new_str:
         raise Exception("Should not add target=_blank to internal anchors")
 
 def run_unit_tests():
+    test_transform()
     test_anchor_cleaning('this text <a href="https://www.example.com">contains a yummy link</a>okay?')
     test_internal_anchor('trying <a href="#top">internal anchor link</a>')
     test_internal_anchor('this makes <a id="yo"/>an anchor on the page')
